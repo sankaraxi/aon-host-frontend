@@ -19,7 +19,7 @@ export default function Menu() {
     if (emails === "") {
       alert("Please provide an email ID");
     } else {
-      axios.post("http://13.202.249.99/api/api/text-mail", key).then((res) => {
+      axios.post("http://13.202.249.99/api/text-mail", key).then((res) => {
         if (res.data.message === "Mail send") {
           alert("Mail sent successfully");
           window.location.reload();
@@ -42,7 +42,7 @@ export default function Menu() {
 
   const handleLogout = async () => {
     try {
-      const response = await fetch('http://13.202.249.99/api/api/logout', {
+      const response = await fetch('http://13.202.249.99/api/logout', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

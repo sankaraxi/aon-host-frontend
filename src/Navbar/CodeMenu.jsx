@@ -37,7 +37,7 @@ export default function CodeMenu() {
     useEffect(() => {
         const fetchUserLog = async () => {
             try {
-            const response = await axios.get(`http://13.202.249.99/api/api/time-left/${userId}`);
+            const response = await axios.get(`http://13.202.249.99/api/time-left/${userId}`);
             setLogData(response.data);
 
             } catch (err) {
@@ -125,7 +125,7 @@ useEffect(() => {
   // Heartbeat check to verify server connectivity
   const checkServerHeartbeat = async () => {
     try {
-      const response = await fetch("http://13.202.249.99/api/api/heartbeat", {
+      const response = await fetch("http://13.202.249.99/api/heartbeat", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -210,7 +210,7 @@ useEffect(() => {
       return;
     }
     try {
-      await fetch("http://13.202.249.99/api/api/start", {
+      await fetch("http://13.202.249.99/api/start", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -262,7 +262,7 @@ useEffect(() => {
   
       if (sessionId && userId) {
         navigator.sendBeacon(
-          `http://13.202.249.99/api/api/pause/${userId}/${sessionId}/${timeLeft}`
+          `http://13.202.249.99/api/pause/${userId}/${sessionId}/${timeLeft}`
         );
       }
     };
@@ -279,7 +279,7 @@ useEffect(() => {
               if(userRole === '3' || userRole === '4'){
                   if(userQuestion === 'a1l1q3'){
                       try {
-                          const response = await fetch('http://13.202.249.99/api/api/run-Assesment', {
+                          const response = await fetch('http://13.202.249.99/api/run-Assesment', {
                               method: 'POST',
                               headers: {
                               'Content-Type': 'application/json',
@@ -313,7 +313,7 @@ useEffect(() => {
                         }
                   }else if(userQuestion === 'a1l1q2'){
                       try {
-                          const response = await fetch('http://13.202.249.99/api/api/run-Assesment-2', {
+                          const response = await fetch('http://13.202.249.99/api/run-Assesment-2', {
                               method: 'POST',
                               headers: {
                               'Content-Type': 'application/json',
@@ -347,7 +347,7 @@ useEffect(() => {
                         }
                   }else if(userQuestion === 'a1l1q1'){
                       try {
-                          const response = await fetch('http://13.202.249.99/api/api/run-Assesment-1', {
+                          const response = await fetch('http://13.202.249.99/api/run-Assesment-1', {
                               method: 'POST',
                               headers: {
                               'Content-Type': 'application/json',
@@ -385,7 +385,7 @@ useEffect(() => {
         
             const handleTimeoutCleanup = async () => {
               try {
-                  const response = await fetch('http://13.202.249.99/api/api/cleanup-docker-2', {
+                  const response = await fetch('http://13.202.249.99/api/cleanup-docker-2', {
                     method: 'POST',
                     headers: {
                       'Content-Type': 'application/json',
@@ -437,7 +437,7 @@ useEffect(() => {
 
 const handleLogout = async () => {
     try {
-      const response = await fetch('http://13.202.249.99/api/api/cleanup-docker-2', {
+      const response = await fetch('http://13.202.249.99/api/cleanup-docker-2', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -490,7 +490,7 @@ const handleLogout = async () => {
             setIsSubmitting(true)   
             if(userQuestion === 'a1l1q3'){
                 try {
-                    const response = await fetch('http://13.202.249.99/api/api/run-Assesment', {
+                    const response = await fetch('http://13.202.249.99/api/run-Assesment', {
                         method: 'POST',
                         headers: {
                         'Content-Type': 'application/json',
@@ -528,7 +528,7 @@ const handleLogout = async () => {
                   }
             } else if(userQuestion === 'a1l1q2'){
                 try {
-                    const response = await fetch('http://13.202.249.99/api/api/run-Assesment-2', {
+                    const response = await fetch('http://13.202.249.99/api/run-Assesment-2', {
                         method: 'POST',
                         headers: {
                         'Content-Type': 'application/json',
@@ -567,7 +567,7 @@ const handleLogout = async () => {
                   }
             } else if(userQuestion === 'a1l1q1'){
                 try {
-                    const response = await fetch('http://13.202.249.99/api/api/run-Assesment-1', {
+                    const response = await fetch('http://13.202.249.99/api/run-Assesment-1', {
                         method: 'POST',
                         headers: {
                         'Content-Type': 'application/json',
@@ -611,7 +611,7 @@ const handleLogout = async () => {
             
         } else if (userRole === '5'){
             try {
-                const response = await fetch('http://13.202.249.99/api/api/run-a10l10-Assesment', {
+                const response = await fetch('http://13.202.249.99/api/run-a10l10-Assesment', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

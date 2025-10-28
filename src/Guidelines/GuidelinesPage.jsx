@@ -27,7 +27,7 @@ export default function GuidelinesPage() {
     useEffect(() => {
         const fetchUserLog = async () => {
             try {
-            const response = await axios.get(`http://13.202.249.99/api/api/time-left/${id}`);
+            const response = await axios.get(`http://13.202.249.99/api/time-left/${id}`);
             console.log('response', response);
             setLogData(response.data);
 
@@ -70,7 +70,7 @@ export default function GuidelinesPage() {
         setEmployeeNo(formData.employeeNo);
       }
       try {
-        const response = await fetch('http://13.202.249.99/api/api/candidate', {
+        const response = await fetch('http://13.202.249.99/api/candidate', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
