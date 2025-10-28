@@ -1,0 +1,12 @@
+@import "tailwindcss";
+
+@import 'bootstrap/dist/css/bootstrap.min.css';
+
+.font-montserrat {
+    font-family: 'Montserrat', sans-serif;
+  }
+  
+  .font-firacode {
+    font-family: 'Fira Code', monospace;
+  }
+  
