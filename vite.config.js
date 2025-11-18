@@ -9,5 +9,4 @@ export default defineConfig({
     host:true,
     port:5194,
   },
-  base:'/aon/',
 })
