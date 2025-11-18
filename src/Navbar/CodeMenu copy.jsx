@@ -50,7 +50,7 @@ export default function CodeMenu() {
     useEffect(() => {
         const fetchUserLog = async () => {
             try {
-            const response = await axios.get(`http://103.118.158.33/aon-api/time-left/${userId}`);
+            const response = await axios.get(`http://103.118.158.33/aon-api/api/time-left/${userId}`);
             setLogData(response.data);
 
             } catch (err) {
@@ -135,7 +135,7 @@ useEffect(() => {
         return;
       }
       try {
-        await fetch("http://103.118.158.33/aon-api/start", {
+        await fetch("http://103.118.158.33/aon-api/api/start", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -179,7 +179,7 @@ useEffect(() => {
   
       if (sessionId && userId) {
         navigator.sendBeacon(
-          `http://103.118.158.33/aon-api/pause/${userId}/${sessionId}/${timeLeft}`
+          `http://103.118.158.33/aon-api/api/pause/${userId}/${sessionId}/${timeLeft}`
         );
       }
     };
@@ -195,7 +195,7 @@ useEffect(() => {
               if(userRole === '3' || userRole === '4'){
                   if(userQuestion === 'a1l1q3'){
                       try {
-                          const response = await fetch('http://103.118.158.33/aon-api/run-Assesment', {
+                          const response = await fetch('http://103.118.158.33/aon-api/api/run-Assesment', {
                               method: 'POST',
                               headers: {
                               'Content-Type': 'application/json',
@@ -229,7 +229,7 @@ useEffect(() => {
                         }
                   }else if(userQuestion === 'a1l1q2'){
                       try {
-                          const response = await fetch('http://103.118.158.33/aon-api/run-Assesment-2', {
+                          const response = await fetch('http://103.118.158.33/aon-api/api/run-Assesment-2', {
                               method: 'POST',
                               headers: {
                               'Content-Type': 'application/json',
@@ -263,7 +263,7 @@ useEffect(() => {
                         }
                   }else if(userQuestion === 'a1l1q1'){
                       try {
-                          const response = await fetch('http://103.118.158.33/aon-api/run-Assesment-1', {
+                          const response = await fetch('http://103.118.158.33/aon-api/api/run-Assesment-1', {
                               method: 'POST',
                               headers: {
                               'Content-Type': 'application/json',
@@ -301,7 +301,7 @@ useEffect(() => {
         
             const handleTimeoutCleanup = async () => {
               try {
-                  const response = await fetch('http://103.118.158.33/aon-api/cleanup-docker-2', {
+                  const response = await fetch('http://103.118.158.33/aon-api/api/cleanup-docker-2', {
                     method: 'POST',
                     headers: {
                       'Content-Type': 'application/json',
@@ -353,7 +353,7 @@ useEffect(() => {
 
 const handleLogout = async () => {
     try {
-      const response = await fetch('http://103.118.158.33/aon-api/cleanup-docker-2', {
+      const response = await fetch('http://103.118.158.33/aon-api/api/cleanup-docker-2', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -406,7 +406,7 @@ const handleLogout = async () => {
             setIsSubmitting(true)   
             if(userQuestion === 'a1l1q3'){
                 try {
-                    const response = await fetch('http://103.118.158.33/aon-api/run-Assesment', {
+                    const response = await fetch('http://103.118.158.33/aon-api/api/run-Assesment', {
                         method: 'POST',
                         headers: {
                         'Content-Type': 'application/json',
@@ -444,7 +444,7 @@ const handleLogout = async () => {
                   }
             } else if(userQuestion === 'a1l1q2'){
                 try {
-                    const response = await fetch('http://103.118.158.33/aon-api/run-Assesment-2', {
+                    const response = await fetch('http://103.118.158.33/aon-api/api/run-Assesment-2', {
                         method: 'POST',
                         headers: {
                         'Content-Type': 'application/json',
@@ -483,7 +483,7 @@ const handleLogout = async () => {
                   }
             } else if(userQuestion === 'a1l1q1'){
                 try {
-                    const response = await fetch('http://103.118.158.33/aon-api/run-Assesment-1', {
+                    const response = await fetch('http://103.118.158.33/aon-api/api/run-Assesment-1', {
                         method: 'POST',
                         headers: {
                         'Content-Type': 'application/json',
@@ -527,7 +527,7 @@ const handleLogout = async () => {
             
         } else if (userRole === '5'){
             try {
-                const response = await fetch('http://103.118.158.33/aon-api/run-a10l10-Assesment', {
+                const response = await fetch('http://103.118.158.33/aon-api/api/run-a10l10-Assesment', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

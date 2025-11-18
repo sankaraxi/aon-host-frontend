@@ -19,7 +19,7 @@ export default function Menu() {
     if (emails === "") {
       alert("Please provide an email ID");
     } else {
-      axios.post("http://103.118.158.33/aon-api/text-mail", key).then((res) => {
+      axios.post("http://103.118.158.33/aon-api/api/text-mail", key).then((res) => {
         if (res.data.message === "Mail send") {
           alert("Mail sent successfully");
           window.location.reload();
@@ -42,7 +42,7 @@ export default function Menu() {
 
   const handleLogout = async () => {
     try {
-      const response = await fetch('http://103.118.158.33/aon-api/logout', {
+      const response = await fetch('http://103.118.158.33/aon-api/api/logout', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

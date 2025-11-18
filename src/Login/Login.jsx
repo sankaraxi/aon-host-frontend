@@ -15,7 +15,7 @@ export default function Login(){
             alert("Please Enter the Password")
         }
         else{
-            axios.post("http://103.118.158.33/aon-api/login",key)
+            axios.post("http://103.118.158.33/aon-api/api/login",key)
             .then((res)=>{
                 sessionStorage.setItem("userId", res.data.id)
                 sessionStorage.setItem("userRole", res.data.role)

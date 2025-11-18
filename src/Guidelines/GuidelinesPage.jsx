@@ -27,7 +27,7 @@ export default function GuidelinesPage() {
     useEffect(() => {
         const fetchUserLog = async () => {
             try {
-            const response = await axios.get(`http://103.118.158.33/aon-api/time-left/${id}`);
+            const response = await axios.get(`http://103.118.158.33/aon-api/api/time-left/${id}`);
             console.log('response', response);
             setLogData(response.data);
 
@@ -70,7 +70,7 @@ export default function GuidelinesPage() {
         setEmployeeNo(formData.employeeNo);
       }
       try {
-        const response = await fetch('http://103.118.158.33/aon-api/candidate', {
+        const response = await fetch('http://103.118.158.33/aon-api/api/candidate', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
