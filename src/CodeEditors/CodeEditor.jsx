@@ -72,7 +72,7 @@ function renderContent() {
         <div className="relative h-[650px]">
           {framework === "react" ? (
               <iframe
-              src={`http://13.202.249.99:${dPort}/?folder=/home/coder/project`}
+              src={`http://103.118.158.33:${dPort}/?folder=/home/coder/project`}
               width="100%"
               height="100%"
               style={{ border: "none" }}
@@ -80,7 +80,7 @@ function renderContent() {
               />
           ) : framework === "vue" ? (
               <iframe
-              src='http://13.202.249.99:8151/?folder=/home/coder/project'
+              src='http://103.118.158.33:8151/?folder=/home/coder/project'
               width="100%"
               height="100%"
               style={{ border: "none" }}
@@ -95,7 +95,7 @@ function renderContent() {
 {
             framework === "react" ? (
               <div className="absolute bottom-6 right-6 z-50">
-                <Link to={`http://13.202.249.99:${oPort}`} target="_blank" rel="noopener noreferrer">
+                <Link to={`http://103.118.158.33:${oPort}`} target="_blank" rel="noopener noreferrer">
                     <button className="bg-blue-600 text-white font-medium px-6 py-3 rounded-lg shadow-lg
                                     hover:bg-blue-700 hover:shadow-xl
                                     transition duration-300 ease-in-out
@@ -107,7 +107,7 @@ function renderContent() {
               </div>
             ) : framework === "vue" ? (
               <div className="absolute bottom-6 right-6 z-50">
-                <Link to='http://13.202.249.99:5244' target="_blank" rel="noopener noreferrer">
+                <Link to='http://103.118.158.33:5244' target="_blank" rel="noopener noreferrer">
                     <button className="bg-blue-600 text-white font-medium px-6 py-3 rounded-lg shadow-lg
                                     hover:bg-blue-700 hover:shadow-xl
                                     transition duration-300 ease-in-out

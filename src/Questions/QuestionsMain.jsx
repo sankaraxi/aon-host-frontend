@@ -60,7 +60,7 @@ export default function QuestionsMain() {
 
     // const runScript = async () => {
     //     try {
-    //         const response = await fetch('http://13.202.249.99/api/run-script', {
+    //         const response = await fetch('http://103.118.158.33/aon-api/run-script', {
     //             method: 'POST',
     //             headers: {
     //                 'Content-Type': 'application/json',
@@ -81,7 +81,7 @@ export default function QuestionsMain() {
 
     // const handleStartAssessment = async () => {
     //     try {
-    //       const res = await fetch('http://13.202.249.99/api/run-script', { method: 'POST' });
+    //       const res = await fetch('http://103.118.158.33/aon-api/run-script', { method: 'POST' });
     //       const data = await res.json();
     //       console.log('Script output:', data.stdout);
     //       alert('Assessment started!');
@@ -106,7 +106,7 @@ export default function QuestionsMain() {
         }, 1000);
 
         try {
-            const res = await fetch('http://13.202.249.99/api/run-script', 
+            const res = await fetch('http://103.118.158.33/aon-api/run-script', 
                 {
                     method: 'POST',
                     headers: {
