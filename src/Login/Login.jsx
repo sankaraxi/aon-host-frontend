@@ -1,5 +1,6 @@
+import React from 'react'
 import axios from 'axios';
-export default function Login(){    
+export default function Login(){
     const handlelogin=(event)=>{
         event.preventDefault();
         var username=document.getElementById("email").value 
@@ -28,7 +29,7 @@ export default function Login(){
                     var id=res.data.id;
                     var empNo =res.data.empNo;
                     if(role===1){
-                        window.location.href=`/admin`
+                        window.location.href=`/admin/dashboard`
                     }
                     else if(role===2){
                         window.location.href=`/question_creator/${id}`

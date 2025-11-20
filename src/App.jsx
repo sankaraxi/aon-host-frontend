@@ -10,6 +10,11 @@ import CodeEditor from './CodeEditors/CodeEditor';
 import NetworkAutoCloser from './utils/NetworkDisconnect';
 import Timer from './Navbar/Timer';
 import PortfolioCard from './Questions/test';
+import Dashboard from './Admin/pages/Dashboard';
+import AdminLayout from './Admin/admin_main';
+import Sidebarcomp from './Admin/sidenav';
+import CreateTest from './Admin/pages/CreateTest';
+import ViewTest from './Admin/pages/ViewTest';
 
 // import Login from './components/Login/Login';
 // import Menu from './components/Menu/Menu';
@@ -52,11 +57,20 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path='/' element={[<Login/>]}/>
+       
         <Route path='/guidelines/:id/:empNo' element={[<Menu/>,<GuidelinesPage/>]}/>
         
         <Route path='/question/:encrypted' element={[<Menu/>,<QuestionsMain/>]}/>
         <Route path='/workspace/:id/:framework/:question/:dPort/:oPort' element={[<CodeMenu/>,<CodeEditor />]}/>
         <Route path='/test' element={[<Menu/>,<PortfolioCard/>]}/>
+        {/* <Route path="/admin/*" element={<AdminLayout/>} /> */}
+        
+          <Route path="admin/dashboard" element={[<Dashboard/>]} />
+          <Route path="/admin/create-test" element={<CreateTest/>}/>
+          <Route path="/admin/view-test" element={<ViewTest/>}/>
+          {/* <Route path="/create-test" element={[<Sidebarcomp/>,<CreateTest />]} /> */}
+          {/* <Route path="/view-test" element={[<Sidebarcomp/>,<ViewTest />]} /> */}
+        
         {/* <Route path='/question_creator/:id' element={[<Menu/>,<Corepage/>]}/> */}
         {/* <Route path='/' element={<Download/>}/> */}
         {/* <Route path='/report/:id' element={[<Menuuser/>,<Reportfile/>]}/>
