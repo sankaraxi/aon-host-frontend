@@ -106,7 +106,7 @@ export default function GuidelinesPage() {
 
   return (
     <>
-      {isModalOpen && (
+      {/* {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full">
             <h2 className="text-xl font-bold mb-4 text-gray-800">Candidate Information</h2>
@@ -147,7 +147,7 @@ export default function GuidelinesPage() {
             </form>
           </div>
         </div>
-      )}
+      )} */}
 
       <div className="max-w-4xl mx-auto p-6 bg-white shadow-md rounded-md mt-10">
         <h1 className="text-2xl font-bold text-center text-gray-800 mb-6 headingcolor">
