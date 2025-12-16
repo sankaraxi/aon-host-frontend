@@ -10,20 +10,6 @@ export default function CodeEditor() {
     console.log("ID:", id);
     console.log("Framework:", framework);
 
-    // const userId = sessionStorage.getItem("userId");
-
-
-    // const dockerPort = sessionStorage.getItem("dockerPort");
-    // var outputPort = sessionStorage.getItem("outputPort");
-
-    // const dockerVuePort = Number(sessionStorage.getItem("dockerPort")) + 1;
-
-    // if (framework === "vue"){
-    //    outputPort = Number(sessionStorage.getItem("outputPort")) + 1;
-    // }
-
-    // console.log(dockerPort,dockerVuePort, outputPort, framework);
-
     const navigate = useNavigate();
       const iframeRef = useRef(null);
 
@@ -72,7 +58,7 @@ function renderContent() {
         <div className="relative h-[650px]">
           {framework === "react" ? (
               <iframe
-              src={`http://13.201.235.2:${dPort}/?folder=/home/coder/project`}
+              src={`/cs/${dPort}/?folder=/home/coder/project`}
               width="100%"
               height="100%"
               style={{ border: "none" }}
@@ -95,7 +81,7 @@ function renderContent() {
 {
             framework === "react" ? (
               <div className="absolute bottom-6 right-6 z-50">
-                <Link to={`http://13.201.235.2:${oPort}`} target="_blank" rel="noopener noreferrer">
+                <Link to={`/out/${oPort}`} target="_blank" rel="noopener noreferrer">
                     <button className="bg-blue-600 text-white font-medium px-6 py-3 rounded-lg shadow-lg
                                     hover:bg-blue-700 hover:shadow-xl
                                     transition duration-300 ease-in-out
