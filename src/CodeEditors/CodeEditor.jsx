@@ -58,7 +58,7 @@ function renderContent() {
         <div className="relative h-[650px]">
           {framework === "react" ? (
               <iframe
-              src={`/cs/${dPort}/?folder=/home/coder/project`}
+              src={`https://assessment.kggeniuslabs.com/cs/${dPort}/?folder=/home/coder/project`}
               width="100%"
               height="100%"
               style={{ border: "none" }}
@@ -71,7 +71,7 @@ function renderContent() {
               height="100%"
               style={{ border: "none" }}
               title="CodeSandbox IDE"
-              />
+              />  
           ) : (
               <p style={{ color: "red", textAlign: "center", marginTop: "2rem" }}>
               🚫 Unauthorized access. You do not have permission to view this editor.
@@ -81,7 +81,7 @@ function renderContent() {
 {
             framework === "react" ? (
               <div className="absolute bottom-6 right-6 z-50">
-                <Link to={`/out/${oPort}`} target="_blank" rel="noopener noreferrer">
+                <Link to={`https://assessment.kggeniuslabs.com/out/${oPort}`} target="_blank" rel="noopener noreferrer">
                     <button className="bg-blue-600 text-white font-medium px-6 py-3 rounded-lg shadow-lg
                                     hover:bg-blue-700 hover:shadow-xl
                                     transition duration-300 ease-in-out
