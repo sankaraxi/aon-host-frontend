@@ -10,6 +10,20 @@ export default function CodeEditor() {
     console.log("ID:", id);
     console.log("Framework:", framework);
 
+    // const userId = sessionStorage.getItem("userId");
+
+
+    // const dockerPort = sessionStorage.getItem("dockerPort");
+    // var outputPort = sessionStorage.getItem("outputPort");
+
+    // const dockerVuePort = Number(sessionStorage.getItem("dockerPort")) + 1;
+
+    // if (framework === "vue"){
+    //    outputPort = Number(sessionStorage.getItem("outputPort")) + 1;
+    // }
+
+    // console.log(dockerPort,dockerVuePort, outputPort, framework);
+
     const navigate = useNavigate();
       const iframeRef = useRef(null);
 
@@ -58,7 +72,7 @@ function renderContent() {
         <div className="relative h-[650px]">
           {framework === "react" ? (
               <iframe
-              src={`https://assessment.kggeniuslabs.com/cs/${dPort}/?folder=/home/coder/project`}
+              src={`https://assessment.kggeniuslabs.com/ds/${dPort}/?folder=/home/coder/project`}
               width="100%"
               height="100%"
               style={{ border: "none" }}
@@ -71,7 +85,7 @@ function renderContent() {
               height="100%"
               style={{ border: "none" }}
               title="CodeSandbox IDE"
-              />  
+              />
           ) : (
               <p style={{ color: "red", textAlign: "center", marginTop: "2rem" }}>
               🚫 Unauthorized access. You do not have permission to view this editor.
