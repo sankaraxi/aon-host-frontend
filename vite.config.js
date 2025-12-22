@@ -8,5 +8,9 @@ export default defineConfig({
   server:{
     host:true,
     port:5194,
-  }
+     allowedHosts: [
+      'assessment.kggeniuslabs.com'
+    ]
+  },
+
 })
