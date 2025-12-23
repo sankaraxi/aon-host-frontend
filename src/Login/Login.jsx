@@ -24,6 +24,11 @@ export default function Login(){
                 sessionStorage.setItem("userQues", res.data.question)
                 sessionStorage.setItem("dockerPort", res.data.docker_port)
                 sessionStorage.setItem("outputPort", res.data.output_port)
+
+                if (res.data.token) {
+                    sessionStorage.setItem("authToken", res.data.token);
+                    axios.defaults.headers.common['Authorization'] = `Bearer ${res.data.token}`;
+                }
                 if(res.data.status==="success"){
                     var role=res.data.role;
                     var id=res.data.id;
