@@ -63,11 +63,15 @@ function App() {
         <Route path='/question/:encrypted' element={[<Menu/>,<QuestionsMain/>]}/>
         <Route path='/workspace/:id/:framework/:question/:dPort/:oPort' element={[<CodeMenu/>,<CodeEditor />]}/>
         <Route path='/test' element={[<Menu/>,<PortfolioCard/>]}/>
+
+        <Route path='/aon/:token' element={[<NetworkAutoCloser/>,<Timer/>]}/>x
         {/* <Route path="/admin/*" element={<AdminLayout/>} /> */}
         
-          <Route path="admin/dashboard" element={[<Dashboard/>]} />
-          <Route path="/admin/create-test" element={<CreateTest/>}/>
-          <Route path="/admin/view-test" element={<ViewTest/>}/>
+        <Route path="/admin/dashboard" element={[<Dashboard/>]} />
+        <Route path="/admin/create-test" element={<CreateTest/>}/>
+        <Route path="/admin/view-test" element={<ViewTest/>}/>
+
+        <Route path="/aon/start" element={[<Menu/>,<GuidelinesPage/>]}/>
           {/* <Route path="/create-test" element={[<Sidebarcomp/>,<CreateTest />]} /> */}
           {/* <Route path="/view-test" element={[<Sidebarcomp/>,<ViewTest />]} /> */}
         

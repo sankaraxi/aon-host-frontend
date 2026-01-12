@@ -1,14 +1,13 @@
-import {useState} from "react";
-import { Link } from "react-router-dom";
+import React, {useState} from "react";
+import { Link, useParams } from "react-router-dom";
 import './systemcheck.css';
 import EnvironmentSetup from './EnvironmentSetup.png';
 import configuration from './configuration.png';
 import ribbon from './ribbon.png';
 import guide from './guide_18823709.png';
+import { use } from "react";
 import { useEffect } from "react";
 import axios from "axios";
-
-import { useLocation, useNavigate } from "react-router-dom"
 
 
 export default function GuidelinesPage() {
@@ -16,77 +15,144 @@ export default function GuidelinesPage() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const [payload, setPayload] = useState(null);
 
+  const { id,empNo } = useParams();
+  const dockerPort = sessionStorage.getItem("dockerPort");
+  const outputPort = sessionStorage.getItem("outputPort");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [employeeNo, setEmployeeNo] = useState('');
+  const [logData, setLogData ] = useState(null);
+  const [formData, setFormData] = useState({
+    name: '',
+    employeeNo: ''
+  });
 
-  useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const token = params.get("t");
+  const [error, setError] = useState('');  
 
-    if (!token) {
-      navigate("/invalid-link", { replace: true });
-      return;
-    }
+    useEffect(() => {
+        const fetchUserLog = async () => {
+            try {
+            const response = await axios.get(`${import.meta.env.VITE_BACKEND_API_URL}/time-left/${id}`);
+            console.log('response', response);
+            setLogData(response.data);
 
-    const resolveToken = async () => {
-      try {
-        const res = await axios.get(`${import.meta.env.VITE_BACKEND_API_URL}/aon/resolve`, {
-          params: { t: token },
-          withCredentials: true // safe if you move to httpOnly cookies later
-        });
+            } catch (err) {
+            setLogData(null);
+            console.log('User not found or server error');
+            console.error(err);
+            }
+        };
+        fetchUserLog();
 
-        const data = res.data;
+    }, [id]);
 
-        console.log("Token resolve response:", data);
+    console.log('logData', logData);
 
-        if (!data.success) {
-          console.error("Token resolve unsuccessful:", data.message);
-          return;
-        }
-
-        // store in React memory only (cleanest)
-        setPayload(data.payload);
-
-        sessionStorage.setItem("dockerPort", data?.payload?.docker_port);
-        sessionStorage.setItem("outputPort", data?.payload?.output_port);
-
-        sessionStorage.setItem("userRole", 4);
-        sessionStorage.setItem("userId", data?.payload?.id);
-        sessionStorage.setItem("userQues", data?.payload?.question_id);
-        sessionStorage.setItem("aonId", data?.payload?.aon_id);
-
-
-        // optional redirect
-        // navigate("/assessment", { replace: true });
-
-      } catch (err) {
-        console.error("Token resolve failed:", err);
+    useEffect(() => {
+      if(logData?.log_status === 0){
+        setIsModalOpen(true);
       }
+    }, [logData]);
+  
+
+
+    const handleInputChange = (e) => {
+      const { name, value } = e.target;
+      setFormData(prev => ({
+        ...prev,
+        [name]: value
+      }));
     };
 
-    resolveToken();
-  }, [location.search, navigate]);
+    const handleSubmit = async (e) => {
+      e.preventDefault();
 
+      if (!formData.name || !formData.employeeNo) {
+        setError('Please fill in all fields');
+        return;
+      }
+      if(formData.employeeNo){
+        setEmployeeNo(formData.employeeNo);
+      }
+      try {
+        const response = await fetch(`${import.meta.env.VITE_BACKEND_API_URL}/candidate`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            userId: id,
+            ...formData
+          }),
+        });
 
-  console.log('payload', payload);
-  console.log('payload id', payload?.id);
+        const data = await response.json();
 
+        if (response.ok) {
+          setIsModalOpen(false);
+          setError('');
+        } else {
+          setError(data.error || 'Failed to submit data. Please try again.');
+        }
+      } catch (err) {
+        setError('An error occurred. Please try again.');
+      }
+
+    };
 
     const paramData = {
-      id: payload?.id,
-      session_id: payload?.session_id,
-      aon_id: payload?.aon_id,
-      question_id: payload?.question_id,
-      dockerPort: payload?.docker_port,
-      outputPort: payload?.output_port,
-      test_id: payload?.test_id,
-      test_name: payload?.test_name,
+      id: id,
+      empNo: empNo,
+      dockerPort: dockerPort,
+      outputPort: outputPort
     }
   
     const base64 = btoa(JSON.stringify(paramData)); 
 
   return (
     <>
+      {/* {isModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full">
+            <h2 className="text-xl font-bold mb-4 text-gray-800">Candidate Information</h2>
+            {error && <p className="text-red-500 mb-4">{error}</p>}
+            <form onSubmit={handleSubmit}>
+              <div className="mb-4">
+                <label htmlFor="name" className="block text-gray-700 mb-2">Name</label>
+                <input
+                  type="text"
+                  id="name"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleInputChange}
+                  className="w-full p-2 border rounded-md"
+                  required
+                />
+              </div>
+              <div className="mb-4">
+                <label htmlFor="employeeNo" className="block text-gray-700 mb-2">Roll/Employee No</label>
+                <input
+                  type="text"
+                  id="employeeNo"
+                  name="employeeNo"
+                  value={formData.employeeNo}
+                  onChange={handleInputChange}
+                  className="w-full p-2 border rounded-md"
+                  required
+                />
+              </div>
+              <div className="flex justify-end gap-4">
+                <button
+                  type="submit"
+                  className="bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700"
+                >
+                  Submit
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )} */}
 
       <div className="max-w-4xl mx-auto p-6 bg-white shadow-md rounded-md mt-10">
         <h1 className="text-2xl font-bold text-center text-gray-800 mb-6 headingcolor">

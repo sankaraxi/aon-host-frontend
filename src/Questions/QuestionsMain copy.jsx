@@ -6,7 +6,7 @@ import A1L1Q01Question from "./A1L1Q1Question";
 
 export default function QuestionsMain() {
     const { encrypted } = useParams();
-    const {id, session_id, aon_id, question_id, dockerPort, outputPort, test_id, test_name} = JSON.parse(atob(encrypted));
+    const {id, empNo, dockerPort, outputPort} = JSON.parse(atob(encrypted));
     const [testdata, setTestdata] = useState([]);
     const [htmlContent, setHtmlContent] = useState('');
     const [isButtonEnabled, setIsButtonEnabled] = useState(false);
@@ -58,7 +58,38 @@ export default function QuestionsMain() {
         setShowTable(!showTable);
     };
 
-    
+    // const runScript = async () => {
+    //     try {
+    //         const response = await fetch(`${import.meta.env.VITE_BACKEND_API_URL}/run-script`, {
+    //             method: 'POST',
+    //             headers: {
+    //                 'Content-Type': 'application/json',
+    //             },
+    //         });
+    //         const data = await response.json();
+    //         console.log('Script output:', data);
+    //         window.location.href = `/workspace/${id}`;
+    //     } catch (error) {
+    //         console.error('Error running script:', error);
+    //     }
+    // };
+
+    const handleReactOrVue = (e) => {
+        setReactOrVue(e.target.value);
+        sessionStorage.setItem("framework", e.target.value)
+    };
+
+    // const handleStartAssessment = async () => {
+    //     try {
+    //       const res = await fetch(`${import.meta.env.VITE_BACKEND_API_URL}/run-script`, { method: 'POST' });
+    //       const data = await res.json();
+    //       console.log('Script output:', data.stdout);
+    //       alert('Assessment started!');
+    //     } catch (err) {
+    //       console.error(err);
+    //       alert('Something went wrong xstarting the assessment.');
+    //     }
+    //   };
     
       const handleStartAssessmentII = async (selectedFramework) => {
         let countdown = 20;
@@ -83,8 +114,8 @@ export default function QuestionsMain() {
                     },
                     body: JSON.stringify({
                       userId: userId,
-                      empNo: aon_id,
-                      userName: aon_id,
+                      empNo: empNo,
+                      userName: userName,
                       question: userQuestion,
                     framework: selectedFramework,
                     dockerPort: dPort,

@@ -21,13 +21,16 @@ export default function CodeMenu() {
     const [notRunning, setNotRunning] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isOnline, setIsOnline] = useState(navigator.onLine);
-    const [timerPaused, setTimerPaused] = useState(false);
+    const [timerPaused, setTimerPaused] = useState(false);  
     const userId = sessionStorage.getItem("userId");
+    const aonId = sessionStorage.getItem("aonId");
     const userRole = sessionStorage.getItem("userRole");
     const userQuestion = sessionStorage.getItem("userQues");
     const framework = sessionStorage.getItem("framework");
     const dockerPort = sessionStorage.getItem("dockerPort");
+    
     const outputPort = sessionStorage.getItem("outputPort");
+    console.log('dockerPort in CodeMenu:', outputPort);
 
     const [logData, setLogData] = useState(null);
 
@@ -285,7 +288,7 @@ useEffect(() => {
                               'Content-Type': 'application/json',
                               },
                               body: JSON.stringify({
-                                  userId:userId, framework:framework
+                                  userId:aonId, framework:framework, outputPort: outputPort
                               }),
                           });
                           const data = await response.json();
@@ -319,7 +322,7 @@ useEffect(() => {
                               'Content-Type': 'application/json',
                               },
                               body: JSON.stringify({
-                                  userId:userId, framework:framework
+                                  userId:aonId, framework:framework, outputPort: outputPort
                               }),
                           });
                           const data = await response.json();
@@ -353,7 +356,7 @@ useEffect(() => {
                               'Content-Type': 'application/json',
                               },
                               body: JSON.stringify({
-                                  userId:userId, framework:framework
+                                  userId:aonId, framework:framework, outputPort: outputPort
                               }),
                           });
                           const data = await response.json();
@@ -391,7 +394,7 @@ useEffect(() => {
                       'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
-                      userId: userId, // Ensure userId is defined in the scope
+                      userId: aonId, // Ensure userId is defined in the scope
                     }),
                   });
               
@@ -443,7 +446,7 @@ const handleLogout = async () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          userId: userId, // Ensure userId is defined in the scope
+          userId: aonId, // Ensure userId is defined in the scope
         }),
       });
   
@@ -496,7 +499,7 @@ const handleLogout = async () => {
                         'Content-Type': 'application/json',
                         },
                         body: JSON.stringify({
-                            userId:userId, framework:framework, outputPort: outputPort
+                            userId:aonId, framework:framework, outputPort: outputPort
                         }),
                     });
                     const data = await response.json();
@@ -534,7 +537,7 @@ const handleLogout = async () => {
                         'Content-Type': 'application/json',
                         },
                         body: JSON.stringify({
-                            userId:userId, framework:framework, outputPort: outputPort
+                            userId:aonId, framework:framework, outputPort: outputPort
                         }),
                     });
                     const data = await response.json();
@@ -573,7 +576,7 @@ const handleLogout = async () => {
                         'Content-Type': 'application/json',
                         },
                         body: JSON.stringify({
-                            userId:userId, framework:framework, outputPort: outputPort
+                            userId:aonId, framework:framework, outputPort: outputPort
                         }),
                     });
                     const data = await response.json();
