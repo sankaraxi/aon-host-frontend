@@ -35,7 +35,7 @@ export default function QuestionsMain() {
     useEffect(() => {
         const userRole = sessionStorage.getItem("userRole");
 
-        console.log("User role:", userRole);
+        // console.log("User role:", userRole);
 
         if (["4", "3", "5"].includes(userRole)) {
         setIsAuthorized(true); // Let them through

@@ -30,7 +30,7 @@ export default function CodeMenu() {
     const dockerPort = sessionStorage.getItem("dockerPort");
     
     const outputPort = sessionStorage.getItem("outputPort");
-    console.log('dockerPort in CodeMenu:', outputPort);
+    // console.log('dockerPort in CodeMenu:', outputPort);
 
     const [logData, setLogData] = useState(null);
 
@@ -276,7 +276,7 @@ useEffect(() => {
 
       
       useEffect(() => {
-        console.log("Time left:", timeLeft);
+        // console.log("Time left:", timeLeft);
         if (timeLeft === 0 || logoutClick === true) {
             const handleTimeoutSubmit = async () => {
               if(userRole === '3' || userRole === '4'){

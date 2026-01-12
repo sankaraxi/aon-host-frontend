@@ -27,7 +27,7 @@ export default function QuestionsMain() {
     const dPort = (reactOrVue === "react" ? + dockerPort : +dockerPort + 1).toString()
     const oPort = (reactOrVue === "react" ? + outputPort : +outputPort + 1).toString()
 
-    console.log(reactOrVue)
+    // console.log(reactOrVue)
     useEffect(() => {
         window.scrollTo(0, 0);
     },[])
@@ -35,7 +35,7 @@ export default function QuestionsMain() {
     useEffect(() => {
         const userRole = sessionStorage.getItem("userRole");
 
-        console.log("User role:", userRole);
+        // console.log("User role:", userRole);
 
         if (["4", "3", "5"].includes(userRole)) {
         setIsAuthorized(true); // Let them through
@@ -95,7 +95,7 @@ export default function QuestionsMain() {
             const data = await res.json();
 
             if (res.ok && data.status === 'success') {
-                console.log('Script output:', data.output);  // Use `data.output` based on backend structure
+                // console.log('Script output:', data.output);  // Use `data.output` based on backend structure
                 // window.location.href = `/workspace/${id}/${selectedFramework}`;
               } else {
                 console.warn('Backend responded with error:', data);

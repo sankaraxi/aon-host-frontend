@@ -37,7 +37,7 @@ export default function GuidelinesPage() {
 
         const data = res.data;
 
-        console.log("Token resolve response:", data);
+        // console.log("Token resolve response:", data);
 
         if (!data.success) {
           console.error("Token resolve unsuccessful:", data.message);
@@ -68,8 +68,8 @@ export default function GuidelinesPage() {
   }, [location.search, navigate]);
 
 
-  console.log('payload', payload);
-  console.log('payload id', payload?.id);
+  // console.log('payload', payload);
+  // console.log('payload id', payload?.id);
 
 
     const paramData = {
