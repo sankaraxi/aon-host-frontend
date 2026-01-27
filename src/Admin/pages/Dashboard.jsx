@@ -158,7 +158,6 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faIdCard, faUserCheck, faUsers } from "@fortawesome/free-solid-svg-icons";
 import axios from "axios";
-import AssignUser from "./AssignUser"; // <-- import
 
 function Dashboard() {
   const [data, setData] = useState({
@@ -238,7 +237,7 @@ function Dashboard() {
         </div>
 
         {/* Test Details Section */}
-        <div className="mt-5">
+        {/* <div className="mt-5">
           <h4 className="fw-bold mb-3">Test Details</h4>
           <div className="table-responsive">
             <table className="table table-bordered table-hover">
@@ -250,7 +249,6 @@ function Dashboard() {
                   <th>No. of Students Assigned</th>
                   <th>No. of Students Used</th>
                   <th>No. of Students Unused</th>
-                  <th>Action</th>
                   <th>Test Status</th>
                 </tr>
               </thead>
@@ -265,10 +263,6 @@ function Dashboard() {
                       <td>{test.assigned}</td>
                       <td>{test.used}</td>
                       <td>{test.unused}</td>
-                      <td>
-                        {/* Pass callback */}
-                        <AssignUser testId={test.test_id} onSuccess={fetchTestDetails} />
-                      </td>
                       <td>
                         <span
                           className={`badge ${
@@ -286,7 +280,7 @@ function Dashboard() {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="7" className="text-center text-muted">
+                    <td colSpan="6" className="text-center text-muted">
                       No test details available
                     </td>
                   </tr>
@@ -294,7 +288,7 @@ function Dashboard() {
               </tbody>
             </table>
           </div>
-        </div>
+        </div> */}
       </div>
     </div>
   );

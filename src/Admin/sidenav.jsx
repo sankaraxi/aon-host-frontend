@@ -2,7 +2,7 @@ import React from "react";
 import { motion } from "framer-motion";
 import "./sidenav.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faHome, faPlusCircle, faEye, faBars,faRightFromBracket } from "@fortawesome/free-solid-svg-icons";
+import { faHome, faPlusCircle, faEye, faBars, faRightFromBracket, faBuilding } from "@fortawesome/free-solid-svg-icons";
 import { Link } from "react-router-dom";
 
 const sidebarVariants = {
@@ -43,6 +43,12 @@ function Sidebarcomp() {
           <Link to="/admin/create-test">
             <FontAwesomeIcon icon={faPlusCircle} className="mx-1 text-light" />
             <motion.span variants={linkVariants}>Create Test</motion.span>
+          </Link>
+        </li>
+        <li>
+          <Link to="/admin/clients">
+            <FontAwesomeIcon icon={faBuilding} className="mx-1 text-light" />
+            <motion.span variants={linkVariants}>Clients</motion.span>
           </Link>
         </li>
         <li>

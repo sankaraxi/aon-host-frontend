@@ -15,6 +15,7 @@ import AdminLayout from './Admin/admin_main';
 import Sidebarcomp from './Admin/sidenav';
 import CreateTest from './Admin/pages/CreateTest';
 import ViewTest from './Admin/pages/ViewTest';
+import ClientManagement from './Admin/pages/ClientManagement';
 
 // import Login from './components/Login/Login';
 // import Menu from './components/Menu/Menu';
@@ -70,6 +71,7 @@ function App() {
         <Route path="/admin/dashboard" element={[<Dashboard/>]} />
         <Route path="/admin/create-test" element={<CreateTest/>}/>
         <Route path="/admin/view-test" element={<ViewTest/>}/>
+        <Route path="/admin/clients" element={<ClientManagement/>}/>
 
         <Route path="/aon/start" element={[<Menu/>,<GuidelinesPage/>]}/>
           {/* <Route path="/create-test" element={[<Sidebarcomp/>,<CreateTest />]} /> */}
