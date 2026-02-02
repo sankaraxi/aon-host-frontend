@@ -57,11 +57,15 @@ export default function CodeEditor() {
 
   useEffect(() => {
     const userRole = sessionStorage.getItem("userRole");
+    const launchToken = sessionStorage.getItem("launchToken");
 
     // console.log("User role:", userRole);
 
     if (["4", "3", "5"].includes(userRole)) {
       setIsAuthorized(true); // Let them through
+    } else if (launchToken) {
+      // Session lost but we have the token - redirect to restore session
+      navigate(`/aon/start?t=${launchToken}`, { replace: true });
     } else {
       navigate("/"); // Kick 'em out
     }

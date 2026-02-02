@@ -47,6 +47,9 @@ export default function GuidelinesPage() {
         // store in React memory only (cleanest)
         setPayload(data.payload);
 
+        // Store the launch token so we can restore session on reload
+        sessionStorage.setItem("launchToken", token);
+
         sessionStorage.setItem("dockerPort", data?.payload?.docker_port);
         sessionStorage.setItem("outputPort", data?.payload?.output_port);
 
@@ -165,6 +168,7 @@ export default function GuidelinesPage() {
             </button>
           </Link>
         </div>
+        
       </div>
 
     </>

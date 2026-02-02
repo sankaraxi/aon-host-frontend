@@ -412,12 +412,14 @@ useEffect(() => {
                   // Clear sessionStorage and redirect
                   sessionStorage.removeItem('userRole');
                   sessionStorage.removeItem('examEndTime');
+                  sessionStorage.removeItem('launchToken');
                   window.location.href = '/'; // Redirect to login page
                 } catch (error) {
                   console.error('Failed to clean up Docker:', error);
                   // Proceed with logout even if the server request fails
                   sessionStorage.removeItem('userRole');
                   sessionStorage.removeItem('examEndTime');
+                  sessionStorage.removeItem('launchToken');
                   window.location.href = '/'; // Redirect to login page
                 }
             };
@@ -464,12 +466,14 @@ const handleLogout = async () => {
       // Clear sessionStorage and redirect
       sessionStorage.removeItem('userRole');
       sessionStorage.removeItem('examEndTime');
+      sessionStorage.removeItem('launchToken');
       window.location.href = '/'; // Redirect to login page
     } catch (error) {
       console.error('Failed to clean up Docker:', error);
       // Proceed with logout even if the server request fails
       sessionStorage.removeItem('userRole');
       sessionStorage.removeItem('examEndTime');
+      sessionStorage.removeItem('launchToken');
       window.location.href = '/'; // Redirect to login page
     }
   };

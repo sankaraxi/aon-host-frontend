@@ -352,7 +352,7 @@ function ClientManagement() {
               <div className="modal-content">
                 <div className="modal-header">
                   <h5 className="modal-title">Add New Client</h5>
-                  <button 
+                  <button   
                     type="button" 
                     className="btn-close" 
                     onClick={() => setShowAddModal(false)}
