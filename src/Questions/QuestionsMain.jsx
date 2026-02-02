@@ -103,11 +103,11 @@ export default function QuestionsMain() {
                 // window.location.href = `/workspace/${id}/${selectedFramework}`;
               } else {
                 console.warn('Backend responded with error:', data);
-                alert('Script failed to start the assessment.');
+                // alert('Script failed to start the assessment.');
               }
           } catch (err) {
             console.error(err);
-            alert('Something went wrong xstarting the assessment.');
+            // alert('Something went wrong xstarting the assessment.');
           }
     };
     
