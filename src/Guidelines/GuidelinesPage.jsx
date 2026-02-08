@@ -49,6 +49,7 @@ export default function GuidelinesPage() {
 
         // Store the launch token so we can restore session on reload
         sessionStorage.setItem("launchToken", token);
+        sessionStorage.setItem("launchTokenId", data?.payload?.id);
 
         sessionStorage.setItem("dockerPort", data?.payload?.docker_port);
         sessionStorage.setItem("outputPort", data?.payload?.output_port);
@@ -57,6 +58,20 @@ export default function GuidelinesPage() {
         sessionStorage.setItem("userId", data?.payload?.id);
         sessionStorage.setItem("userQues", data?.payload?.question_id);
         sessionStorage.setItem("aonId", data?.payload?.aon_id);
+
+        // Check if assessment was already started - redirect to workspace
+        if (data.payload.assessment_started === 1 && data.payload.workspace_url) {
+          console.log("Assessment already started, redirecting to workspace:", data.payload.workspace_url);
+          
+          // Also restore the framework if available
+          if (data.payload.framework) {
+            sessionStorage.setItem("framework", data.payload.framework);
+          }
+          
+          // Redirect to the saved workspace URL
+          window.location.href = data.payload.workspace_url;
+          return;
+        }
 
 
         // optional redirect

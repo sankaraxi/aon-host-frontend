@@ -23,6 +23,7 @@ export default function CodeMenu() {
     const [isOnline, setIsOnline] = useState(navigator.onLine);
     const [timerPaused, setTimerPaused] = useState(false);  
     const userId = sessionStorage.getItem("userId");
+    const launchTokenId = sessionStorage.getItem("launchTokenId") || sessionStorage.getItem("userId");
     const aonId = sessionStorage.getItem("aonId");
     const userRole = sessionStorage.getItem("userRole");
     const userQuestion = sessionStorage.getItem("userQues");
@@ -40,7 +41,7 @@ export default function CodeMenu() {
     useEffect(() => {
         const fetchUserLog = async () => {
             try {
-            const response = await axios.get(`${import.meta.env.VITE_BACKEND_API_URL}/time-left/${userId}`);
+            const response = await axios.get(`${import.meta.env.VITE_BACKEND_API_URL}/time-left/${launchTokenId}`);
             setLogData(response.data);
 
             } catch (err) {
@@ -261,11 +262,11 @@ useEffect(() => {
   useEffect(() => {
     const handleUnload = () => {
       const sessionId = sessionStorage.getItem('sessionId');
-      const userId = sessionStorage.getItem('userId'); // Make sure this is stored earlier
+      const launchTokenId = sessionStorage.getItem('launchTokenId') || sessionStorage.getItem('userId');
   
-      if (sessionId && userId) {
+      if (sessionId && launchTokenId) {
         navigator.sendBeacon(
-          `${import.meta.env.VITE_BACKEND_API_URL}/pause/${userId}/${sessionId}/${timeLeft}`
+          `${import.meta.env.VITE_BACKEND_API_URL}/aon/pause-timer/${launchTokenId}/${timeLeft}`
         );
       }
     };
@@ -280,108 +281,34 @@ useEffect(() => {
         if (timeLeft === 0 || logoutClick === true) {
             const handleTimeoutSubmit = async () => {
               if(userRole === '3' || userRole === '4'){
-                  if(userQuestion === 'a1l1q3'){
-                      try {
-                          const response = await fetch(`${import.meta.env.VITE_BACKEND_API_URL}/run-Assesment`, {
-                              method: 'POST',
-                              headers: {
-                              'Content-Type': 'application/json',
-                              },
-                              body: JSON.stringify({
-                                  userId:aonId, framework:framework, outputPort: outputPort
-                              }),
-                          });
-                          const data = await response.json();
-                          // console.log('Script output:', data);
-                          if (
-                              data.error &&
-                              data.error.includes("Frontend application is not running on port")
-                            ) {
-                              console.log("Error running script:", data.error);
-                              setNotRunning(!notRunning);
-                            }
-                            
-                  
-                      setDetailedResults(data.detailedResults)
-                      } catch (err) {
-                          console.error('Error running script:', err);
+                  // Use the new submit-final endpoint that sends webhook
+                  try {
+                      const response = await fetch(`${import.meta.env.VITE_BACKEND_API_URL}/submit-final`, {
+                          method: 'POST',
+                          headers: {
+                          'Content-Type': 'application/json',
+                          },
+                          body: JSON.stringify({
+                              aonId: aonId, 
+                              framework: framework, 
+                              outputPort: outputPort,
+                              userQuestion: userQuestion
+                          }),
+                      });
+                      const data = await response.json();
+                      console.log('Final submission response:', data);
+                      
+                      if (data.error) {
+                          console.log("Error in final submission:", data.error);
                           setNotRunning(!notRunning);
-                          if (err.response && err.response.data?.error) {
-                          //   setError(err.response.data.error);
-                          console.error('Error running script:', err.response.data.error);
-                          } else {
-                              console.error('Error running script:', err);
-                          //   setError('Something went wrong.');
-                          }
-                        }
-                  }else if(userQuestion === 'a1l1q2'){
-                      try {
-                          const response = await fetch(`${import.meta.env.VITE_BACKEND_API_URL}/run-Assesment-2`, {
-                              method: 'POST',
-                              headers: {
-                              'Content-Type': 'application/json',
-                              },
-                              body: JSON.stringify({
-                                  userId:aonId, framework:framework, outputPort: outputPort
-                              }),
-                          });
-                          const data = await response.json();
-                          // console.log('Script output:', data);
-                          if (
-                              data.error &&
-                              data.error.includes("Frontend application is not running on port")
-                            ) {
-                              console.log("Error running script:", data.error);
-                              setNotRunning(!notRunning);
-                            }
-                            
-                  
-                      setDetailedResults(data.detailedResults)
-                      } catch (err) {
-                          console.error('Error running script:', err);
-                          setNotRunning(!notRunning);
-                          if (err.response && err.response.data?.error) {
-                          //   setError(err.response.data.error);
-                          console.error('Error running script:', err.response.data.error);
-                          } else {
-                              console.error('Error running script:', err);
-                          //   setError('Something went wrong.');
-                          }
-                        }
-                  }else if(userQuestion === 'a1l1q1'){
-                      try {
-                          const response = await fetch(`${import.meta.env.VITE_BACKEND_API_URL}/run-Assesment-1`, {
-                              method: 'POST',
-                              headers: {
-                              'Content-Type': 'application/json',
-                              },
-                              body: JSON.stringify({
-                                  userId:aonId, framework:framework, outputPort: outputPort
-                              }),
-                          });
-                          const data = await response.json();
-                          // console.log('Script output:', data);
-                          if (
-                              data.error &&
-                              data.error.includes("Frontend application is not running on port")
-                            ) {
-                              console.log("Error running script:", data.error);
-                              setNotRunning(!notRunning);
-                            }
-                            
-                  
-                      setDetailedResults(data.detailedResults)
-                      } catch (err) {
-                          console.error('Error running script:', err);
-                          setNotRunning(!notRunning);
-                          if (err.response && err.response.data?.error) {
-                          //   setError(err.response.data.error);
-                          console.error('Error running script:', err.response.data.error);
-                          } else {
-                              console.error('Error running script:', err);
-                          //   setError('Something went wrong.');
-                          }
-                        }
+                      }
+                      
+                      if (data.detailedResults) {
+                          setDetailedResults(data.detailedResults);
+                      }
+                  } catch (err) {
+                      console.error('Error in final submission:', err);
+                      setNotRunning(!notRunning);
                   }
               }
             };
@@ -441,6 +368,30 @@ useEffect(() => {
     };
 
 const handleLogout = async () => {
+    try {
+      // First, call submit-final to send results to webhook
+      const userQuestion = sessionStorage.getItem("userQues");
+      const framework = sessionStorage.getItem("framework");
+      const outputPort = sessionStorage.getItem("outputPort");
+      const aonId = sessionStorage.getItem("aonId");
+      
+      await fetch(`${import.meta.env.VITE_BACKEND_API_URL}/submit-final`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          aonId: aonId,
+          framework: framework,
+          outputPort: outputPort,
+          userQuestion: userQuestion
+        }),
+      });
+      console.log("Final submission completed on logout");
+    } catch (submitErr) {
+      console.error('Final submission error on logout:', submitErr);
+    }
+    
     try {
       const response = await fetch(`${import.meta.env.VITE_BACKEND_API_URL}/cleanup-docker-2`, {
         method: 'POST',

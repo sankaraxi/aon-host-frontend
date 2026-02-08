@@ -65,6 +65,9 @@ export default function QuestionsMain() {
     
     
       const handleStartAssessmentII = async (selectedFramework) => {
+        const workspaceUrl = `/workspace/${id}/${selectedFramework}/${userQuestion}/${dPort}/${oPort}`;
+        const launchTokenId = sessionStorage.getItem("launchTokenId") || sessionStorage.getItem("userId");
+        
         let countdown = 20;
         setRedirectCountdown(countdown); // Show "Redirecting in 10 seconds..."
     
@@ -74,9 +77,27 @@ export default function QuestionsMain() {
     
             if (countdown === 0) {
                 clearInterval(interval);
-                window.location.href = `/workspace/${id}/${selectedFramework}/${userQuestion}/${dPort}/${oPort}`;
+                window.location.href = workspaceUrl;
             }
         }, 1000);
+
+        // Track that assessment has started with workspace URL
+        try {
+            await fetch(`${import.meta.env.VITE_BACKEND_API_URL}/aon/start-workspace`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    launchTokenId: launchTokenId,
+                    workspaceUrl: workspaceUrl,
+                    framework: selectedFramework
+                }),
+            });
+            console.log("Workspace start tracked successfully");
+        } catch (err) {
+            console.error("Failed to track workspace start:", err);
+        }
 
         try {
             const res = await fetch(`${import.meta.env.VITE_BACKEND_API_URL}/run-script`, 
