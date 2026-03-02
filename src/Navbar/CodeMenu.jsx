@@ -1,4 +1,4 @@
-import React, { useState, useEffect, use } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Link, useParams } from "react-router-dom";
 import axios from "axios";
 import GuidelinesSideBar from "../Guidelines/GuidelinesSideBar";
@@ -21,7 +21,9 @@ export default function CodeMenu() {
     const [notRunning, setNotRunning] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isOnline, setIsOnline] = useState(navigator.onLine);
-    const [timerPaused, setTimerPaused] = useState(false);  
+    const [timerPaused, setTimerPaused] = useState(false);
+    const [showConfirmModal, setShowConfirmModal] = useState(false);
+    const submittingRef = useRef(false);  
     const userId = sessionStorage.getItem("userId");
     const launchTokenId = sessionStorage.getItem("launchTokenId") || sessionStorage.getItem("userId");
     const aonId = sessionStorage.getItem("aonId");
@@ -277,11 +279,16 @@ useEffect(() => {
 
       
       useEffect(() => {
-        // console.log("Time left:", timeLeft);
         if (timeLeft === 0 || logoutClick === true) {
-            const handleTimeoutSubmit = async () => {
+            // Guard: skip if already submitting via the Submit button
+            if (submittingRef.current) return;
+            submittingRef.current = true;
+
+            const handleTimeoutAndCleanup = async () => {
+              let redirectUrl = null;
+
+              // Step 1: Submit final assessment
               if(userRole === '3' || userRole === '4'){
-                  // Use the new submit-final endpoint that sends webhook
                   try {
                       const response = await fetch(`${import.meta.env.VITE_BACKEND_API_URL}/submit-final`, {
                           method: 'POST',
@@ -306,14 +313,18 @@ useEffect(() => {
                       if (data.detailedResults) {
                           setDetailedResults(data.detailedResults);
                       }
+
+                      // Capture redirect_url from the response
+                      if (data.redirect_url) {
+                          redirectUrl = data.redirect_url;
+                      }
                   } catch (err) {
                       console.error('Error in final submission:', err);
                       setNotRunning(!notRunning);
                   }
               }
-            };
-        
-            const handleTimeoutCleanup = async () => {
+
+              // Step 2: Cleanup docker
               try {
                   const response = await fetch(`${import.meta.env.VITE_BACKEND_API_URL}/cleanup-docker-2`, {
                     method: 'POST',
@@ -321,38 +332,36 @@ useEffect(() => {
                       'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
-                      userId: aonId, // Ensure userId is defined in the scope
+                      userId: aonId,
                     }),
                   });
               
-                  // Check if the response is successful
                   if (!response.ok) {
                     throw new Error(`Server responded with status ${response.status}`);
                   }
               
-                  // Parse the response
                   const data = await response.json();
                   if (data.status !== 'success') {
                     throw new Error(data.error || 'Docker cleanup failed');
                   }
-              
-                  // Clear sessionStorage and redirect
-                  sessionStorage.removeItem('userRole');
-                  sessionStorage.removeItem('examEndTime');
-                  sessionStorage.removeItem('launchToken');
-                  window.location.href = '/'; // Redirect to login page
                 } catch (error) {
                   console.error('Failed to clean up Docker:', error);
-                  // Proceed with logout even if the server request fails
-                  sessionStorage.removeItem('userRole');
-                  sessionStorage.removeItem('examEndTime');
-                  sessionStorage.removeItem('launchToken');
-                  window.location.href = '/'; // Redirect to login page
                 }
+
+              // Step 3: Clear session and redirect
+              sessionStorage.removeItem('userRole');
+              sessionStorage.removeItem('examEndTime');
+              sessionStorage.removeItem('launchToken');
+              
+              // Redirect to redirect_url if available, otherwise fallback to login
+              if (redirectUrl) {
+                window.location.href = redirectUrl;
+              } else {
+                window.location.href = '/';
+              }
             };
         
-            handleTimeoutSubmit();
-            handleTimeoutCleanup();
+            handleTimeoutAndCleanup();
           }
       }, [timeLeft, logoutClick]);
     
@@ -366,68 +375,6 @@ useEffect(() => {
         setIsModalClosing(false);
         setIsGradeModalOpen(true);
     };
-
-const handleLogout = async () => {
-    try {
-      // First, call submit-final to send results to webhook
-      const userQuestion = sessionStorage.getItem("userQues");
-      const framework = sessionStorage.getItem("framework");
-      const outputPort = sessionStorage.getItem("outputPort");
-      const aonId = sessionStorage.getItem("aonId");
-      
-      await fetch(`${import.meta.env.VITE_BACKEND_API_URL}/submit-final`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          aonId: aonId,
-          framework: framework,
-          outputPort: outputPort,
-          userQuestion: userQuestion
-        }),
-      });
-      console.log("Final submission completed on logout");
-    } catch (submitErr) {
-      console.error('Final submission error on logout:', submitErr);
-    }
-    
-    try {
-      const response = await fetch(`${import.meta.env.VITE_BACKEND_API_URL}/cleanup-docker-2`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          userId: aonId, // Ensure userId is defined in the scope
-        }),
-      });
-  
-      // Check if the response is successful
-      if (!response.ok) {
-        throw new Error(`Server responded with status ${response.status}`);
-      }
-  
-      // Parse the response
-      const data = await response.json();
-      if (data.status !== 'success') {
-        throw new Error(data.error || 'Docker cleanup failed');
-      }
-  
-      // Clear sessionStorage and redirect
-      sessionStorage.removeItem('userRole');
-      sessionStorage.removeItem('examEndTime');
-      sessionStorage.removeItem('launchToken');
-      window.location.href = '/'; // Redirect to login page
-    } catch (error) {
-      console.error('Failed to clean up Docker:', error);
-      // Proceed with logout even if the server request fails
-      sessionStorage.removeItem('userRole');
-      sessionStorage.removeItem('examEndTime');
-      sessionStorage.removeItem('launchToken');
-      window.location.href = '/'; // Redirect to login page
-    }
-  };
 
     const closeGradeModal = () => {
         setIsModalClosing(true);
@@ -601,7 +548,64 @@ const handleLogout = async () => {
     };
 
     const handleLogoutClick = () => {
-        setLogoutClick(true);
+        setShowConfirmModal(true);
+    }
+
+    const handleConfirmSubmit = async () => {
+        // Guard: skip if already submitting via timer
+        if (submittingRef.current) return;
+        submittingRef.current = true;
+
+        setShowConfirmModal(false);
+        setIsSubmitting(true);
+        let redirectUrl = null;
+
+        // Step 1: Submit final assessment (runs test + sends webhook from backend)
+        if (userRole === '3' || userRole === '4') {
+            try {
+                const response = await fetch(`${import.meta.env.VITE_BACKEND_API_URL}/submit-final`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        aonId: aonId,
+                        framework: framework,
+                        outputPort: outputPort,
+                        userQuestion: userQuestion
+                    }),
+                });
+                const data = await response.json();
+                console.log('Final submission response:', data);
+                console.log('redirect_url from response:', data.redirect_url);
+                if (data.redirect_url) {
+                    redirectUrl = data.redirect_url;
+                }
+            } catch (err) {
+                console.error('Error in final submission:', err);
+            }
+        }
+
+        // Step 2: Cleanup docker
+        try {
+            await fetch(`${import.meta.env.VITE_BACKEND_API_URL}/cleanup-docker-2`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId: aonId }),
+            });
+        } catch (error) {
+            console.error('Failed to clean up Docker:', error);
+        }
+
+        // Step 3: Clear session and redirect
+        sessionStorage.removeItem('userRole');
+        sessionStorage.removeItem('examEndTime');
+        sessionStorage.removeItem('launchToken');
+
+        console.log('Redirecting to:', redirectUrl || '/');
+        if (redirectUrl) {
+            window.location.href = redirectUrl;
+        } else {
+            window.location.href = '/';
+        }
     }
 
     return (
@@ -633,6 +637,9 @@ const handleLogout = async () => {
                     
                     
                         <button onClick={runScript} className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition duration-200 font-medium shadow-md">Run Test</button>
+                    
+                    
+                        <button onClick={handleLogoutClick} className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg transition duration-200 font-medium shadow-md">Submit Assessment</button>
                    
                     
                     {/* Timer with fixed widths for all elements */}
@@ -660,12 +667,7 @@ const handleLogout = async () => {
                         </div>
                     )}
 
-                    <button 
-                        className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition duration-200 font-medium shadow-md"
-                        onClick={handleLogoutClick}
-                    >
-                        Submit and Logout
-                    </button>
+
                 </div>
             </nav>
 
@@ -683,8 +685,10 @@ const handleLogout = async () => {
                     </button>
                     
                     {/* <Link to={`/report/${id}`} className="w-full"> */}
-                        <button onClick={runScript} className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition duration-200 font-medium shadow-md w-full">Submit Assessment</button>
+                        <button onClick={runScript} className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition duration-200 font-medium shadow-md w-full">Run Test</button>
                     {/* </Link> */}
+                    
+                        <button onClick={handleLogoutClick} className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg transition duration-200 font-medium shadow-md w-full">Submit Assessment</button>
                     
                     {/* Timer for mobile */}
                     <div className="flex items-center justify-center border-2 border-white/30 rounded-lg py-2 px-3 text-white">
@@ -1197,6 +1201,34 @@ const handleLogout = async () => {
                         <strong>You click on the <code>Guidelines</code> button in the assessment page if you have any queries. </strong>
                       </ul>
                     </div>
+        </div>
+    </div>
+)}
+
+{showConfirmModal && (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+        <div className="bg-white p-8 rounded-xl shadow-2xl text-center w-[450px] max-w-[90vw]">
+            <div className="mb-4">
+                <svg className="mx-auto h-16 w-16 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                </svg>
+            </div>
+            <h2 className="text-xl font-bold text-gray-800 mb-2">Are you sure you want to submit?</h2>
+            <p className="text-gray-600 mb-6">Once submitted, you will not be able to make any further changes to your assessment. Your code will be evaluated and you will be logged out.</p>
+            <div className="flex gap-3 justify-center">
+                <button
+                    onClick={() => setShowConfirmModal(false)}
+                    className="px-6 py-2.5 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg font-medium transition duration-200"
+                >
+                    Cancel
+                </button>
+                <button
+                    onClick={handleConfirmSubmit}
+                    className="px-6 py-2.5 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-medium transition duration-200 shadow-md"
+                >
+                    Yes, Submit
+                </button>
+            </div>
         </div>
     </div>
 )}

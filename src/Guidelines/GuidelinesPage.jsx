@@ -10,13 +10,13 @@ import axios from "axios";
 
 import { useLocation, useNavigate } from "react-router-dom"
 
-
 export default function GuidelinesPage() {
 
   const location = useLocation();
   const navigate = useNavigate();
 
   const [payload, setPayload] = useState(null);
+  const [alreadySubmitted, setAlreadySubmitted] = useState(false);
 
 
   useEffect(() => {
@@ -46,6 +46,12 @@ export default function GuidelinesPage() {
 
         // store in React memory only (cleanest)
         setPayload(data.payload);
+
+        // Check if the user has already submitted the assessment
+        if (data.payload.submitted === 1) {
+          setAlreadySubmitted(true);
+          return;
+        }
 
         // Store the launch token so we can restore session on reload
         sessionStorage.setItem("launchToken", token);
@@ -102,6 +108,28 @@ export default function GuidelinesPage() {
     }
   
     const base64 = btoa(JSON.stringify(paramData)); 
+
+  // Show "already submitted" screen if the user has already completed the assessment
+  if (alreadySubmitted) {
+    return (
+      <div className="flex items-center justify-center min-h-[80vh]">
+        <div className="max-w-lg mx-auto p-10 bg-white shadow-lg rounded-xl text-center">
+          <div className="mb-6">
+            <svg className="mx-auto h-20 w-20 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <h1 className="text-2xl font-bold text-gray-800 mb-4">Assessment Already Submitted</h1>
+          <p className="text-gray-600 text-lg">
+            You have already completed and submitted the assessment. 
+          </p>
+          <p className="text-gray-500 mt-2">
+            If you believe this is an error, please contact your administrator.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
