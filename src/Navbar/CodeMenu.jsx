@@ -9,7 +9,6 @@ import A1L1Q03Question from "../Questions/A1L1Q3Question";
 export default function CodeMenu() {
     const { id, question } = useParams();
     const [timeLeft, setTimeLeft] = useState(null);
-    const [logoutClick, setLogoutClick] = useState(false);  
     const [isGradeModalOpen, setIsGradeModalOpen] = useState(false);
     const [isModalClosing, setIsModalClosing] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -21,7 +20,6 @@ export default function CodeMenu() {
     const [notRunning, setNotRunning] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isOnline, setIsOnline] = useState(navigator.onLine);
-    const [timerPaused, setTimerPaused] = useState(false);
     const [showConfirmModal, setShowConfirmModal] = useState(false);
     const submittingRef = useRef(false);  
     const userId = sessionStorage.getItem("userId");
@@ -94,38 +92,11 @@ useEffect(() => {
   const handleOnline = () => {
     console.log("Network connection restored");
     setIsOnline(true);
-    setTimerPaused(false);
-
-    // Calculate the time elapsed while offline
-    const offlineTime = sessionStorage.getItem("wentOfflineAt");
-    if (offlineTime) {
-      const timeElapsed = Math.floor((Date.now() - parseInt(offlineTime)) / 1000);
-      console.log(`Network was offline for ${timeElapsed} seconds`);
-
-      // Adjust the exam end time to account for the offline period
-      const savedEndTime = sessionStorage.getItem("examEndTime");
-      if (savedEndTime) {
-        const newEndTime = new Date(new Date(savedEndTime).getTime() + timeElapsed * 1000);
-        sessionStorage.setItem("examEndTime", newEndTime.toISOString());
-        console.log("Exam end time adjusted to:", newEndTime);
-
-        // Update timeLeft immediately to reflect the adjusted end time
-        const diff = Math.floor((newEndTime - new Date()) / 1000);
-        setTimeLeft(diff > 0 ? diff : 0);
-      }
-
-      // Clear the offline timestamp
-      sessionStorage.removeItem("wentOfflineAt");
-    }
   };
 
   const handleOffline = () => {
     console.log("Network connection lost");
     setIsOnline(false);
-    setTimerPaused(true);
-
-    // Store the timestamp when we went offline
-    sessionStorage.setItem("wentOfflineAt", Date.now().toString());
   };
 
   // Heartbeat check to verify server connectivity
@@ -239,8 +210,6 @@ useEffect(() => {
 
   // Update timer every second, but only if we're online and timer isn't paused
   const updateTimer = () => {
-    if (timerPaused || !isOnline) return;
-
     const endTime = sessionStorage.getItem("examEndTime");
     if (!endTime) {
       setTimeLeft(0);
@@ -258,114 +227,9 @@ useEffect(() => {
 
   const intervalId = setInterval(updateTimer, 1000);
   return () => clearInterval(intervalId);
-}, [logData, isOnline, timerPaused]);
-
-
-  useEffect(() => {
-    const handleUnload = () => {
-      const sessionId = sessionStorage.getItem('sessionId');
-      const launchTokenId = sessionStorage.getItem('launchTokenId') || sessionStorage.getItem('userId');
-  
-      if (sessionId && launchTokenId) {
-        navigator.sendBeacon(
-          `${import.meta.env.VITE_BACKEND_API_URL}/aon/pause-timer/${launchTokenId}/${timeLeft}`
-        );
-      }
-    };
-  
-    window.addEventListener('beforeunload', handleUnload);
-    return () => window.removeEventListener('beforeunload', handleUnload);
-  }, [timeLeft]);
+}, [logData, isOnline]);
 
       
-      useEffect(() => {
-        if (timeLeft === 0 || logoutClick === true) {
-            // Guard: skip if already submitting via the Submit button
-            if (submittingRef.current) return;
-            submittingRef.current = true;
-
-            const handleTimeoutAndCleanup = async () => {
-              let redirectUrl = null;
-
-              // Step 1: Submit final assessment
-              if(userRole === '3' || userRole === '4'){
-                  try {
-                      const response = await fetch(`${import.meta.env.VITE_BACKEND_API_URL}/submit-final`, {
-                          method: 'POST',
-                          headers: {
-                          'Content-Type': 'application/json',
-                          },
-                          body: JSON.stringify({
-                              aonId: aonId, 
-                              framework: framework, 
-                              outputPort: outputPort,
-                              userQuestion: userQuestion
-                          }),
-                      });
-                      const data = await response.json();
-                      console.log('Final submission response:', data);
-                      
-                      if (data.error) {
-                          console.log("Error in final submission:", data.error);
-                          setNotRunning(!notRunning);
-                      }
-                      
-                      if (data.detailedResults) {
-                          setDetailedResults(data.detailedResults);
-                      }
-
-                      // Capture redirect_url from the response
-                      if (data.redirect_url) {
-                          redirectUrl = data.redirect_url;
-                      }
-                  } catch (err) {
-                      console.error('Error in final submission:', err);
-                      setNotRunning(!notRunning);
-                  }
-              }
-
-              // Step 2: Cleanup docker
-              try {
-                  const response = await fetch(`${import.meta.env.VITE_BACKEND_API_URL}/cleanup-docker-2`, {
-                    method: 'POST',
-                    headers: {
-                      'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                      userId: aonId,
-                    }),
-                  });
-              
-                  if (!response.ok) {
-                    throw new Error(`Server responded with status ${response.status}`);
-                  }
-              
-                  const data = await response.json();
-                  if (data.status !== 'success') {
-                    throw new Error(data.error || 'Docker cleanup failed');
-                  }
-                } catch (error) {
-                  console.error('Failed to clean up Docker:', error);
-                }
-
-              // Step 3: Clear session and redirect
-              sessionStorage.removeItem('userRole');
-              sessionStorage.removeItem('examEndTime');
-              sessionStorage.removeItem('launchToken');
-              
-              // Redirect to redirect_url if available, otherwise fallback to login
-              if (redirectUrl) {
-                window.location.href = redirectUrl;
-              } else {
-                window.location.href = '/';
-              }
-            };
-        
-            handleTimeoutAndCleanup();
-          }
-      }, [timeLeft, logoutClick]);
-    
-
     const hours = Math.floor(timeLeft / 3600);
     const minutes = Math.floor((timeLeft % 3600) / 60);
     const seconds = timeLeft % 60;
@@ -589,7 +453,7 @@ useEffect(() => {
             await fetch(`${import.meta.env.VITE_BACKEND_API_URL}/cleanup-docker-2`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userId: aonId }),
+                body: JSON.stringify({ userId: aonId, question: userQuestion, framework: framework }),
             });
         } catch (error) {
             console.error('Failed to clean up Docker:', error);
@@ -1251,4 +1115,3 @@ useEffect(() => {
         </>
     );
 }
-
