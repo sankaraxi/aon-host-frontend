@@ -22,6 +22,7 @@ export default function CodeMenu() {
     const [isOnline, setIsOnline] = useState(navigator.onLine);
     const [showConfirmModal, setShowConfirmModal] = useState(false);
     const submittingRef = useRef(false);  
+    const startWorkspaceTrackedRef = useRef(false);
     const userId = sessionStorage.getItem("userId");
     const launchTokenId = sessionStorage.getItem("launchTokenId") || sessionStorage.getItem("userId");
     const aonId = sessionStorage.getItem("aonId");
@@ -53,6 +54,42 @@ export default function CodeMenu() {
         fetchUserLog();
 
     }, [userId]);
+
+        useEffect(() => {
+            if (startWorkspaceTrackedRef.current) return;
+
+            const launchToken = sessionStorage.getItem("launchToken");
+            const currentLaunchTokenId = sessionStorage.getItem("launchTokenId") || sessionStorage.getItem("userId");
+
+            if (!launchToken || !currentLaunchTokenId || !(userRole === '3' || userRole === '4')) {
+                return;
+            }
+
+            const trackWorkspaceStart = async () => {
+                try {
+                    startWorkspaceTrackedRef.current = true;
+                    const workspaceUrl = window.location.pathname;
+
+                    await fetch(`${import.meta.env.VITE_BACKEND_API_URL}/aon/start-workspace`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            launchTokenId: currentLaunchTokenId,
+                            workspaceUrl,
+                            framework,
+                        }),
+                    });
+                    console.log("Workspace start tracked on timer screen visibility");
+                } catch (err) {
+                    startWorkspaceTrackedRef.current = false;
+                    console.error("Failed to track workspace start:", err);
+                }
+            };
+
+            trackWorkspaceStart();
+        }, [framework, userRole]);
 
      useEffect(() => {
     if (logData?.log_status === 2) {
