@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Link, useParams } from "react-router-dom";
 import axios from "axios";
+import Swal from 'sweetalert2';
 import GuidelinesSideBar from "../Guidelines/GuidelinesSideBar";
 import A1L1Q01Question from "../Questions/A1L1Q1Question";
 import A1L1Q02Question from "../Questions/A1L1Q2Question";
@@ -24,6 +25,8 @@ export default function CodeMenu() {
     const [showConfirmModal, setShowConfirmModal] = useState(false);
     const submittingRef = useRef(false);  
     const startWorkspaceTrackedRef = useRef(false);
+    const timerExpiredRef = useRef(false);
+    const offlineAtRef = useRef(null);
     const userId = sessionStorage.getItem("userId");
     const launchTokenId = sessionStorage.getItem("launchTokenId") || sessionStorage.getItem("userId");
     const aonId = sessionStorage.getItem("aonId");
@@ -160,6 +163,26 @@ export default function CodeMenu() {
     }
   }, [logData]);
 
+    // Auto-submit when timer reaches 0
+    useEffect(() => {
+        if (timeLeft === 0 && !timerExpiredRef.current) {
+            timerExpiredRef.current = true;
+            Swal.fire({
+                icon: 'warning',
+                title: 'Time\'s Up!',
+                text: 'Your assessment time has expired. Auto-submitting now...',
+                confirmButtonText: 'OK',
+                confirmButtonColor: '#d33',
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                timer: 4000,
+                timerProgressBar: true,
+            }).then(() => {
+                handleAutoSubmit();
+            });
+        }
+    }, [timeLeft, handleAutoSubmit]);
+
     useEffect(() => {
         if (detailedResults?.EvaluationDetails?.length > 0) {
             setIsGradeModalOpen(true);
@@ -186,12 +209,23 @@ export default function CodeMenu() {
 // Track online/offline status
 useEffect(() => {
   const handleOnline = () => {
-    console.log("Network connection restored");
+    console.log("Network connection restored — resuming timer");
+    if (offlineAtRef.current !== null) {
+      const offlineDuration = Date.now() - offlineAtRef.current;
+      const savedEndTime = sessionStorage.getItem("examEndTime");
+      if (savedEndTime) {
+        const extendedEndTime = new Date(new Date(savedEndTime).getTime() + offlineDuration);
+        sessionStorage.setItem("examEndTime", extendedEndTime.toISOString());
+        console.log(`Timer extended by ${Math.round(offlineDuration / 1000)}s to compensate offline period`);
+      }
+      offlineAtRef.current = null;
+    }
     setIsOnline(true);
   };
 
   const handleOffline = () => {
-    console.log("Network connection lost");
+    console.log("Network connection lost — timer paused");
+    offlineAtRef.current = Date.now();
     setIsOnline(false);
   };
 
@@ -306,6 +340,7 @@ useEffect(() => {
 
   // Update timer every second, but only if we're online and timer isn't paused
   const updateTimer = () => {
+    if (!isOnline) return; // Freeze display while offline
     const endTime = sessionStorage.getItem("examEndTime");
     if (!endTime) {
       setTimeLeft(0);
