@@ -50,6 +50,7 @@ export default function CodeMenu() {
 
         if (userRole === '3' || userRole === '4') {
             try {
+                // First try submitting with assessment (autoSubmit flag for timer-expired message)
                 const response = await fetch(`${import.meta.env.VITE_BACKEND_API_URL}/submit-final`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -57,12 +58,31 @@ export default function CodeMenu() {
                         aonId: aonId,
                         framework: framework,
                         outputPort: outputPort,
-                        userQuestion: userQuestion
+                        userQuestion: userQuestion,
+                        autoSubmit: true,
                     }),
                 });
                 const data = await response.json();
-                if (data.redirect_url) {
-                    redirectUrl = data.redirect_url;
+
+                if (data.devServerNotRunning) {
+                    // Dev server not running → submit without assessment
+                    console.log('Dev server not running during auto-submit, submitting without assessment...');
+                    const noAssessResponse = await fetch(`${import.meta.env.VITE_BACKEND_API_URL}/submit-no-assessment`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            aonId: aonId,
+                            message: "The timer has run out also candidate do not attempted the test by following the guidelines",
+                        }),
+                    });
+                    const noAssessData = await noAssessResponse.json();
+                    if (noAssessData.redirect_url) {
+                        redirectUrl = noAssessData.redirect_url;
+                    }
+                } else {
+                    if (data.redirect_url) {
+                        redirectUrl = data.redirect_url;
+                    }
                 }
             } catch (err) {
                 console.error('Error in auto-submission:', err);
@@ -573,6 +593,22 @@ useEffect(() => {
                 });
                 const data = await response.json();
                 console.log('Final submission response:', data);
+
+                // If dev server is not running, show guidelines instead of submitting
+                if (data.devServerNotRunning) {
+                    setIsSubmitting(false);
+                    submittingRef.current = false;
+                    setShowGuidelines(true);
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Application Not Running',
+                        text: 'Your development server is not running. Please follow the guidelines to start your application before submitting.',
+                        confirmButtonText: 'OK',
+                        confirmButtonColor: '#3085d6',
+                    });
+                    return;
+                }
+
                 console.log('redirect_url from response:', data.redirect_url);
                 if (data.redirect_url) {
                     redirectUrl = data.redirect_url;
