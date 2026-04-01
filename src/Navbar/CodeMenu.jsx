@@ -26,7 +26,8 @@ export default function CodeMenu() {
     const submittingRef = useRef(false);  
     const startWorkspaceTrackedRef = useRef(false);
     const timerExpiredRef = useRef(false);
-    const offlineAtRef = useRef(null);
+    const isOnlineRef = useRef(navigator.onLine);
+    const pausedTimeLeftRef = useRef(null);
     const userId = sessionStorage.getItem("userId");
     const launchTokenId = sessionStorage.getItem("launchTokenId") || sessionStorage.getItem("userId");
     const aonId = sessionStorage.getItem("aonId");
@@ -206,67 +207,69 @@ export default function CodeMenu() {
     }, [isModalClosing]);
     
     // Track online/offline status
-// Track online/offline status
 useEffect(() => {
-  const handleOnline = () => {
-    console.log("Network connection restored — resuming timer");
-    if (offlineAtRef.current !== null) {
-      const offlineDuration = Date.now() - offlineAtRef.current;
-      const savedEndTime = sessionStorage.getItem("examEndTime");
-      if (savedEndTime) {
-        const extendedEndTime = new Date(new Date(savedEndTime).getTime() + offlineDuration);
-        sessionStorage.setItem("examEndTime", extendedEndTime.toISOString());
-        console.log(`Timer extended by ${Math.round(offlineDuration / 1000)}s to compensate offline period`);
-      }
-      offlineAtRef.current = null;
-    }
-    setIsOnline(true);
-  };
+  const goOffline = () => {
+    if (!isOnlineRef.current) return; // Already offline, don't overwrite paused value
+    console.log("Network lost — pausing timer");
+    isOnlineRef.current = false;
 
-  const handleOffline = () => {
-    console.log("Network connection lost — timer paused");
-    offlineAtRef.current = Date.now();
+    // Snapshot the current timeLeft so we can restore it exactly on reconnect
+    const endTime = sessionStorage.getItem("examEndTime");
+    if (endTime) {
+      const diff = Math.floor((new Date(endTime) - new Date()) / 1000);
+      pausedTimeLeftRef.current = diff > 0 ? diff : 0;
+    }
     setIsOnline(false);
   };
 
-  // Heartbeat check to verify server connectivity
+  const goOnline = () => {
+    if (isOnlineRef.current) return; // Already online
+    console.log("Network restored — resuming timer");
+    isOnlineRef.current = true;
+
+    // Recompute examEndTime from the frozen value so no time is lost
+    if (pausedTimeLeftRef.current !== null && pausedTimeLeftRef.current > 0) {
+      const newEndTime = new Date(Date.now() + pausedTimeLeftRef.current * 1000);
+      sessionStorage.setItem("examEndTime", newEndTime.toISOString());
+      console.log(`Timer resumed at ${pausedTimeLeftRef.current}s remaining`);
+    }
+    pausedTimeLeftRef.current = null;
+    setIsOnline(true);
+  };
+
+  // Heartbeat with a short timeout so we detect offline quickly
   const checkServerHeartbeat = async () => {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 3000);
     try {
       const response = await fetch(`${import.meta.env.VITE_BACKEND_API_URL}/heartbeat`, {
         method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        // signal: AbortSignal.timeout ? AbortSignal.timeout(5000) : undefined,
+        signal: controller.signal,
       });
+      clearTimeout(timeoutId);
 
-      if (!response.ok) {
-        throw new Error("Server responded with error status");
-      }
+      if (!response.ok) throw new Error("Server error");
 
-      if (!isOnline) {
-        console.log("Server heartbeat OK, resuming timer");
-        handleOnline(); // Trigger the online handler to adjust timer
-      }
-    } catch (error) {
-      if (isOnline) {
-        console.warn("Server heartbeat failed — treating as offline:", error.message);
-        handleOffline();
-      }
+      // Heartbeat succeeded → we're online
+      goOnline();
+    } catch {
+      clearTimeout(timeoutId);
+      // Heartbeat failed → we're offline
+      goOffline();
     }
   };
 
-  const intervalId = setInterval(checkServerHeartbeat, 500); // Ping every 5 seconds
+  const intervalId = setInterval(checkServerHeartbeat, 3000);
 
-  window.addEventListener("online", handleOnline);
-  window.addEventListener("offline", handleOffline);
+  window.addEventListener("online", goOnline);
+  window.addEventListener("offline", goOffline);
 
   return () => {
     clearInterval(intervalId);
-    window.removeEventListener("online", handleOnline);
-    window.removeEventListener("offline", handleOffline);
+    window.removeEventListener("online", goOnline);
+    window.removeEventListener("offline", goOffline);
   };
-}, [isOnline]);
+}, []);
 
 // Timer logic
 useEffect(() => {
@@ -338,9 +341,9 @@ useEffect(() => {
     }
   }
 
-  // Update timer every second, but only if we're online and timer isn't paused
+  // Update timer every second — reads ref so it reacts instantly to offline
   const updateTimer = () => {
-    if (!isOnline) return; // Freeze display while offline
+    if (!isOnlineRef.current) return; // Freeze display while offline
     const endTime = sessionStorage.getItem("examEndTime");
     if (!endTime) {
       setTimeLeft(0);
@@ -358,7 +361,7 @@ useEffect(() => {
 
   const intervalId = setInterval(updateTimer, 1000);
   return () => clearInterval(intervalId);
-}, [logData, isOnline]);
+}, [logData]);
 
       
     const hours = Math.floor(timeLeft / 3600);
