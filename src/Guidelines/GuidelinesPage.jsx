@@ -1,5 +1,4 @@
 import {useState} from "react";
-import { Link } from "react-router-dom";
 import './systemcheck.css';
 import EnvironmentSetup from './EnvironmentSetup.png';
 import configuration from './configuration.png';
@@ -9,6 +8,7 @@ import { useEffect } from "react";
 import axios from "axios";
 
 import { useLocation, useNavigate } from "react-router-dom"
+import { enterFullscreen } from '../utils/useAssessmentProtection';
 
 export default function GuidelinesPage() {
 
@@ -205,11 +205,21 @@ export default function GuidelinesPage() {
         </section>
 
         <div className="mt-4">
-        <Link to={`/question/${base64}`}>
-            <button className="w-full bg-green-600 text-white py-3 px-6 rounded-md shadow hover:bg-green-700 transition duration-200">
+            <button 
+              onClick={async () => {
+                try {
+                  await enterFullscreen();
+                } catch (e) {
+                  console.error('Failed to enter fullscreen:', e);
+                }
+                sessionStorage.setItem('assessmentFullscreen', 'true');
+                sessionStorage.setItem('tabSwitchCount', '0');
+                navigate(`/question/${base64}`);
+              }}
+              className="w-full bg-green-600 text-white py-3 px-6 rounded-md shadow hover:bg-green-700 transition duration-200"
+            >
               Start Assessment
             </button>
-          </Link>
         </div>
         
       </div>

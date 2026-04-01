@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import A1L1Q03Question from "./A1L1Q3Question";
 import A1L1Q02Question from "./A1L1Q2Question";
 import A1L1Q01Question from "./A1L1Q1Question";
+import { useAssessmentProtection } from '../utils/useAssessmentProtection';
 
 export default function QuestionsMain() {
     const { encrypted } = useParams();
@@ -23,6 +24,12 @@ export default function QuestionsMain() {
     const userName = sessionStorage.getItem("userName");
     const userQuestion = sessionStorage.getItem("userQues");
     const navigate = useNavigate();
+
+    // Assessment protection: fullscreen + tab switch detection
+    useAssessmentProtection({
+      enabled: sessionStorage.getItem('assessmentFullscreen') === 'true',
+      isCodeEditorPage: false,
+    });
 
     const dPort = (reactOrVue === "react" ? + dockerPort : +dockerPort + 1).toString()
     const oPort = (reactOrVue === "react" ? + outputPort : +outputPort + 1).toString()
@@ -76,7 +83,7 @@ export default function QuestionsMain() {
     
             if (countdown === 0) {
                 clearInterval(interval);
-                window.location.href = workspaceUrl;
+                navigate(workspaceUrl, { replace: true });
             }
         }, 1000);
 

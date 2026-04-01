@@ -1,10 +1,11 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Link, useParams } from "react-router-dom";
 import axios from "axios";
 import GuidelinesSideBar from "../Guidelines/GuidelinesSideBar";
 import A1L1Q01Question from "../Questions/A1L1Q1Question";
 import A1L1Q02Question from "../Questions/A1L1Q2Question";
 import A1L1Q03Question from "../Questions/A1L1Q3Question";
+import { useAssessmentProtection } from '../utils/useAssessmentProtection';
 
 export default function CodeMenu() {
     const { id, question } = useParams();
@@ -35,6 +36,64 @@ export default function CodeMenu() {
     // console.log('dockerPort in CodeMenu:', outputPort);
 
     const [logData, setLogData] = useState(null);
+
+    // Auto-submit callback for tab switch protection
+    const handleAutoSubmit = useCallback(async () => {
+        if (submittingRef.current) return;
+        submittingRef.current = true;
+        setIsSubmitting(true);
+        let redirectUrl = null;
+
+        if (userRole === '3' || userRole === '4') {
+            try {
+                const response = await fetch(`${import.meta.env.VITE_BACKEND_API_URL}/submit-final`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        aonId: aonId,
+                        framework: framework,
+                        outputPort: outputPort,
+                        userQuestion: userQuestion
+                    }),
+                });
+                const data = await response.json();
+                if (data.redirect_url) {
+                    redirectUrl = data.redirect_url;
+                }
+            } catch (err) {
+                console.error('Error in auto-submission:', err);
+            }
+        }
+
+        try {
+            await fetch(`${import.meta.env.VITE_BACKEND_API_URL}/cleanup-docker-2`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId: aonId, question: userQuestion, framework: framework }),
+            });
+        } catch (error) {
+            console.error('Failed to clean up Docker:', error);
+        }
+
+        sessionStorage.removeItem('userRole');
+        sessionStorage.removeItem('examEndTime');
+        sessionStorage.removeItem('launchToken');
+        sessionStorage.removeItem('tabSwitchCount');
+        sessionStorage.removeItem('assessmentFullscreen');
+
+        if (redirectUrl) {
+            window.location.href = redirectUrl;
+        } else {
+            window.location.href = '/';
+        }
+    }, [aonId, framework, outputPort, userQuestion, userRole]);
+
+    // Assessment protection: fullscreen + tab switch detection with auto-submit
+    useAssessmentProtection({
+        enabled: sessionStorage.getItem('assessmentFullscreen') === 'true',
+        isCodeEditorPage: true,
+        onAutoSubmit: handleAutoSubmit,
+    });
 
 
     console.log(notRunning);
@@ -500,6 +559,8 @@ useEffect(() => {
         sessionStorage.removeItem('userRole');
         sessionStorage.removeItem('examEndTime');
         sessionStorage.removeItem('launchToken');
+        sessionStorage.removeItem('tabSwitchCount');
+        sessionStorage.removeItem('assessmentFullscreen');
 
         console.log('Redirecting to:', redirectUrl || '/');
         if (redirectUrl) {
