@@ -233,16 +233,17 @@ function renderContent() {
 
                 {/* Dev server not running */}
                 {devServerStatus === 'not-running' && (
-                  <div className="flex-1 flex flex-col items-center justify-center bg-gray-50 gap-5 px-8 text-center">
-                    <svg className="h-16 w-16 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <div className="flex-1 flex flex-col items-center justify-center bg-gradient-to-b from-gray-50 to-gray-100 px-6 py-12">
+                    <svg className="h-20 w-20 text-yellow-400 mb-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
                     </svg>
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-800 mb-1">Development Server Not Running</h3>
-                      <p className="text-gray-500 text-sm max-w-sm">
-                        Please start your development server in the terminal before viewing the output by following the Project Setup Guidelines..
-                      </p>
-                    </div>
+                    <h3 className="text-2xl font-bold text-gray-800 mb-3 text-center">Development Server Not Running</h3>
+                    <p className="text-gray-600 text-sm leading-relaxed max-w-md text-center mb-2">
+                      Please start your development server in the terminal before viewing the output.
+                    </p>
+                    <p className="text-gray-500 text-xs leading-relaxed max-w-md text-center mb-8">
+                      Follow the Project Setup Guidelines to run <span className="font-mono bg-white px-2 py-1 rounded">npm run dev</span>
+                    </p>
                     <button
                       onClick={async () => {
                         setDevServerStatus('checking');
@@ -259,7 +260,7 @@ function renderContent() {
                           setDevServerStatus('not-running');
                         }
                       }}
-                      className="px-5 py-2 bg-[#291571] text-white rounded-lg text-sm font-medium hover:bg-[#3d1f9e] transition"
+                      className="px-8 py-3 bg-[#291571] text-white rounded-lg font-semibold hover:bg-[#3d1f9e] active:scale-95 transition duration-200 shadow-md hover:shadow-lg"
                     >
                       Retry
                     </button>
