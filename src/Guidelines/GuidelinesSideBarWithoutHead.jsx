@@ -1,7 +1,7 @@
 import React from 'react';
 import { RxHamburgerMenu } from "react-icons/rx";
 
-const GuidelinesSideBar = () => {
+const GuidelinesSideBarWithoutHead = () => {
   const steps = [
     {
       step: '01',
@@ -57,12 +57,12 @@ const GuidelinesSideBar = () => {
 
   return (
     <div className="max-w-4xl pl-4 pt-4 bg-white shadow-md rounded-lg">
-      <header className="mb-8 pb-4 border-b border-gray-200 flex justify-between items-center">
+      {/* <header className="mb-8 pb-4 border-b border-gray-200 flex justify-between items-center">
         <div>
           <h2 className="text-2xl font-medium text-gray-800">Project Setup Guidelines</h2>
           <p className="text-sm text-gray-500 mt-1">Follow these steps to set up your development environment</p>
         </div>
-      </header>
+      </header> */}
 
       <ol className="space-y-10">
         {steps.map(({ step, title, details, image }, index) => (
@@ -115,4 +115,4 @@ const GuidelinesSideBar = () => {
   );
 };
 
-export default GuidelinesSideBar;
+export default GuidelinesSideBarWithoutHead;

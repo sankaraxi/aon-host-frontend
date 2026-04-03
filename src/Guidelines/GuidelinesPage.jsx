@@ -4,11 +4,13 @@ import EnvironmentSetup from './EnvironmentSetup.png';
 import configuration from './configuration.png';
 import ribbon from './ribbon.png';
 import guide from './guide_18823709.png';
+import GuidelinesSideBarWithoutHead from './GuidelinesSideBarWithoutHead';
 import { useEffect } from "react";
 import axios from "axios";
 
 import { useLocation, useNavigate } from "react-router-dom"
 import { enterFullscreen } from '../utils/useAssessmentProtection';
+import { useTabClaim } from '../utils/useTabClaim';
 
 export default function GuidelinesPage() {
 
@@ -17,6 +19,9 @@ export default function GuidelinesPage() {
 
   const [payload, setPayload] = useState(null);
   const [alreadySubmitted, setAlreadySubmitted] = useState(false);
+  const [tabBlocked, setTabBlocked] = useState(false);
+  const [activeTabId, setActiveTabId] = useState(null);
+  const [activeTokenId, setActiveTokenId] = useState(null);
 
 
   useEffect(() => {
@@ -64,6 +69,41 @@ export default function GuidelinesPage() {
         sessionStorage.setItem("userId", data?.payload?.id);
         sessionStorage.setItem("userQues", data?.payload?.question_id);
         sessionStorage.setItem("aonId", data?.payload?.aon_id);
+        if (data?.payload?.redirect_url) {
+          sessionStorage.setItem("redirectUrl", data.payload.redirect_url);
+        } else {
+          sessionStorage.removeItem("redirectUrl");
+        }
+
+        // ── Single-tab enforcement ──────────────────────────────────────
+        // Generate a stable tabId for this browser tab (survives in-tab
+        // refreshes via sessionStorage, but NOT shared across tabs).
+        let localTabId = sessionStorage.getItem('assessmentTabId');
+        if (!localTabId) {
+          localTabId = (typeof crypto !== 'undefined' && crypto.randomUUID)
+            ? crypto.randomUUID()
+            : Math.random().toString(36).substring(2) + Date.now().toString(36);
+          sessionStorage.setItem('assessmentTabId', localTabId);
+        }
+
+        try {
+          const claimRes = await axios.post(
+            `${import.meta.env.VITE_BACKEND_API_URL}/aon/claim-tab`,
+            { launchTokenId: data.payload.id, tabId: localTabId }
+          );
+          if (claimRes.data.status === 'blocked') {
+            setTabBlocked(true);
+            return;
+          }
+          // 'allowed' or 'submitted' — proceed; submitted is handled below
+        } catch (claimErr) {
+          // Fail-open: if the endpoint is unreachable, allow access
+          console.warn('Tab claim check failed, proceeding:', claimErr.message);
+        }
+
+        setActiveTabId(localTabId);
+        setActiveTokenId(data.payload.id);
+        // ────────────────────────────────────────────────────────────────
 
         // Check if assessment was already started - redirect to workspace
         if (data.payload.assessment_started === 1 && data.payload.workspace_url) {
@@ -91,6 +131,14 @@ export default function GuidelinesPage() {
     resolveToken();
   }, [location.search, navigate]);
 
+
+  // Heartbeat: keep the single-tab lock alive while this tab is open
+  useTabClaim({
+    launchTokenId: activeTokenId,
+    tabId: activeTabId,
+    enabled: Boolean(activeTokenId && activeTabId),
+    onEvicted: () => setTabBlocked(true),
+  });
 
   // console.log('payload', payload);
   // console.log('payload id', payload?.id);
@@ -131,6 +179,28 @@ export default function GuidelinesPage() {
     );
   }
 
+  // Show blocked screen when another tab already has this assessment open
+  if (tabBlocked) {
+    return (
+      <div className="flex items-center justify-center min-h-[80vh]">
+        <div className="max-w-lg mx-auto p-10 bg-white shadow-lg rounded-xl text-center">
+          <div className="mb-6">
+            <svg className="mx-auto h-20 w-20 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          </div>
+          <h1 className="text-2xl font-bold text-gray-800 mb-4">Active Session Detected</h1>
+          <p className="text-gray-600 text-lg">
+            This assessment is already open in another tab or window.
+          </p>
+          <p className="text-gray-500 mt-2">
+            Please close the other tab or window and try again. If you have already closed it, wait a few seconds and then refresh this page.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <>
 
@@ -159,22 +229,7 @@ export default function GuidelinesPage() {
             <h2 className="text-xl font-semibold text-gray-800 mb-2 headingcolor">
               <img src={configuration} alt="configuration Icon" className="w-8 h-8 inline-block" /> Configuration Setup
             </h2>
-            <p className="text-gray-700 mb-2">Before starting the development:</p>
-            <ul className="list-disc list-inside text-gray-700 mt-1 space-y-1">
-              <li><strong>Step 1:</strong> Open the terminal and install the required npm modules.</li>
-              <div>
-                <img src="/npminstall.png" className="animation" alt="npm install" />
-              </div>
-              <li><strong>Step 2:</strong> Type the Command to run the react/vue application</li>
-              <div>
-                <img src="/npmrundev.png" className="animation" alt="npm run dev" />
-              </div>
-              <li><strong>Step 3:</strong> Check the App.js (for React) or App.vue (for Vue) file to understand the structure and the class names used.</li>
-              <li>Based on those class names, create appropriate styles in the <code>App.css</code></li>
-              <li>Also, review the <code>index.html</code> file located in the project folder to ensure that your layout aligns with any HTML structure-related test cases. This helps you meet all DOM and layout requirements during validation.</li>
-              <li><strong>Step 4:</strong> Click the <code>Output</code> button to view your output.</li>
-              <strong>You click on the <code>Guidelines</code> button in the assessment page if you have any queries.</strong>
-            </ul>
+            <GuidelinesSideBarWithoutHead />
           </div>
         </section>
 

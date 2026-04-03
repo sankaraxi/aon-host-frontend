@@ -4,6 +4,7 @@ import A1L1Q03Question from "./A1L1Q3Question";
 import A1L1Q02Question from "./A1L1Q2Question";
 import A1L1Q01Question from "./A1L1Q1Question";
 import { useAssessmentProtection } from '../utils/useAssessmentProtection';
+import { useTabClaim } from '../utils/useTabClaim';
 
 export default function QuestionsMain() {
     const { encrypted } = useParams();
@@ -29,6 +30,18 @@ export default function QuestionsMain() {
     useAssessmentProtection({
       enabled: sessionStorage.getItem('assessmentFullscreen') === 'true',
       isCodeEditorPage: false,
+      redirectUrl: sessionStorage.getItem('redirectUrl'),
+    });
+
+    // Continue single-tab heartbeat lock while the candidate is on this page
+    useTabClaim({
+      launchTokenId: sessionStorage.getItem('launchTokenId'),
+      tabId: sessionStorage.getItem('assessmentTabId'),
+      enabled: Boolean(
+        sessionStorage.getItem('launchTokenId') &&
+        sessionStorage.getItem('assessmentTabId')
+      ),
+      onEvicted: () => navigate('/'),
     });
 
     const dPort = (reactOrVue === "react" ? + dockerPort : +dockerPort + 1).toString()

@@ -42,6 +42,7 @@ export function useAssessmentProtection({
   onAutoSubmit,
   isCodeEditorPage = false,
   enabled = true,
+  redirectUrl = null,
 } = {}) {
   const isProcessingRef = useRef(false);
   const onAutoSubmitRef = useRef(onAutoSubmit);
@@ -78,6 +79,8 @@ export function useAssessmentProtection({
           onAutoSubmitRef.current();
         } else {
           // Not on code editor – just logout
+          // Capture destination BEFORE clearing sessionStorage
+          const destination = redirectUrl || sessionStorage.getItem('redirectUrl') || '/';
           Swal.fire({
             icon: 'error',
             title: 'Session Terminated',
@@ -88,15 +91,15 @@ export function useAssessmentProtection({
             allowEscapeKey: false,
             timer: 3000,
             timerProgressBar: true,
+          }).then(() => {
+            // Clear only after Swal closes so no route guard sees a missing userRole
+            sessionStorage.removeItem('userRole');
+            sessionStorage.removeItem('examEndTime');
+            sessionStorage.removeItem('launchToken');
+            sessionStorage.removeItem('tabSwitchCount');
+            sessionStorage.removeItem('assessmentFullscreen');
+            window.location.replace(destination);
           });
-          sessionStorage.removeItem('userRole');
-          sessionStorage.removeItem('examEndTime');
-          sessionStorage.removeItem('launchToken');
-          sessionStorage.removeItem('tabSwitchCount');
-          sessionStorage.removeItem('assessmentFullscreen');
-          setTimeout(() => {
-            window.location.href = '/';
-          }, 1500);
         }
       }
     } else if (

@@ -21,6 +21,7 @@ export default function CodeMenu() {
     const [showQuestion, setShowQuestion] = useState(false);
     const [notRunning, setNotRunning] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isSubmittingFinal, setIsSubmittingFinal] = useState(false);
     const [isOnline, setIsOnline] = useState(navigator.onLine);
     const [showConfirmModal, setShowConfirmModal] = useState(false);
     const submittingRef = useRef(false);  
@@ -46,6 +47,7 @@ export default function CodeMenu() {
         if (submittingRef.current) return;
         submittingRef.current = true;
         setIsSubmitting(true);
+        setIsSubmittingFinal(true);
         let redirectUrl = null;
 
         if (userRole === '3' || userRole === '4') {
@@ -105,11 +107,7 @@ export default function CodeMenu() {
         sessionStorage.removeItem('tabSwitchCount');
         sessionStorage.removeItem('assessmentFullscreen');
 
-        if (redirectUrl) {
-            window.location.href = redirectUrl;
-        } else {
-            window.location.href = '/';
-        }
+        window.location.replace(redirectUrl || sessionStorage.getItem('redirectUrl') || '/');
     }, [aonId, framework, outputPort, userQuestion, userRole]);
 
     // Assessment protection: fullscreen + tab switch detection with auto-submit
@@ -117,6 +115,7 @@ export default function CodeMenu() {
         enabled: sessionStorage.getItem('assessmentFullscreen') === 'true',
         isCodeEditorPage: true,
         onAutoSubmit: handleAutoSubmit,
+        redirectUrl: sessionStorage.getItem('redirectUrl'),
     });
 
 
@@ -186,7 +185,7 @@ export default function CodeMenu() {
 
     // Auto-submit when timer reaches 0
     useEffect(() => {
-        if (timeLeft === 0 && !timerExpiredRef.current) {
+        if (timeLeft === 0 && !timerExpiredRef.current && !submittingRef.current) {
             timerExpiredRef.current = true;
             Swal.fire({
                 icon: 'warning',
@@ -410,6 +409,30 @@ useEffect(() => {
     const runScript = async () => {
 
         if(userRole === '3' || userRole === '4'){
+            // Pre-check: ensure the dev server is running before executing the test
+            try {
+                const checkRes = await fetch(`${import.meta.env.VITE_BACKEND_API_URL}/check-dev-server`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ outputPort }),
+                });
+                const checkData = await checkRes.json();
+                if (!checkData.running) {
+                    setShowGuidelines(true);
+                    setShowQuestion(false);
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Application Not Running',
+                        text: 'Your development server is not running. Please follow the guidelines to start your application before running the test.',
+                        confirmButtonText: 'OK',
+                        confirmButtonColor: '#3085d6',
+                    });
+                    return;
+                }
+            } catch {
+                // If the pre-check itself fails, fall through and let the assessment handle it
+            }
+
             setIsSubmitting(true)   
             if(userQuestion === 'a1l1q3'){
                 try {
@@ -576,6 +599,7 @@ useEffect(() => {
 
         setShowConfirmModal(false);
         setIsSubmitting(true);
+        setIsSubmittingFinal(true);
         let redirectUrl = null;
 
         // Step 1: Submit final assessment (runs test + sends webhook from backend)
@@ -636,12 +660,7 @@ useEffect(() => {
         sessionStorage.removeItem('tabSwitchCount');
         sessionStorage.removeItem('assessmentFullscreen');
 
-        console.log('Redirecting to:', redirectUrl || '/');
-        if (redirectUrl) {
-            window.location.href = redirectUrl;
-        } else {
-            window.location.href = '/';
-        }
+        window.location.replace(redirectUrl || sessionStorage.getItem('redirectUrl') || '/');
     }
 
     return (
@@ -663,10 +682,10 @@ useEffect(() => {
                 
                 {/* Desktop menu */}
                 <div className="hidden lg:flex items-center gap-6">
-                    <button onClick={() => setShowQuestion(!showQuestion)} className="bg-white hover:bg-blue-200 text-black px-4 py-2 rounded-lg transition duration-200 font-medium shadow-md">
+                    <button onClick={() => { setShowQuestion(!showQuestion); setShowGuidelines(false); }} className="bg-white hover:bg-blue-200 text-black px-4 py-2 rounded-lg transition duration-200 font-medium shadow-md">
                         Question
                     </button>
-                    <button onClick={() => setShowGuidelines(!showGuidelines)} className="bg-white hover:bg-blue-200 text-black px-4 py-2 rounded-lg transition duration-200 font-medium shadow-md">
+                    <button onClick={() => { setShowGuidelines(!showGuidelines); setShowQuestion(false); }} className="bg-white hover:bg-blue-200 text-black px-4 py-2 rounded-lg transition duration-200 font-medium shadow-md">
                         Guidelines
                     </button>
                     
@@ -1217,26 +1236,8 @@ useEffect(() => {
             </button>
 
             <div className="shadow-md p-4 animation">
-            
-                      <h2 className="text-xl font-semibold text-gray-800 mb-2 headingcolor"> Configuration Setup</h2>
-                      <p className="text-gray-700 mb-2">Before starting the development:</p>
-                      <ul className="list-disc list-inside text-gray-700 mt-1 space-y-1">
-                        <li><strong>Step 1:</strong> Open the terminal and install the required npm modules.</li>
-                        <div>
-            
-                          <img src="/npminstall.png" className="animation"/>
-                        </div>
-                        <li><strong>Step 2:</strong>Type the Command to run the react/vue application</li>
-                        <div>
-                          <img src="/npmrundev.png" className="animation"/>
-                        </div>
-                        <li><strong>Step 3:</strong> Check the App.js (for React) or App.vue (for Vue) file to understand the structure and the class names used.</li>
-                        <li>Based on those class names, create appropriate styles in the <code>App.css</code></li>
-                        <li>Also, review the <code>index.html</code> file located in the project folder to ensure that your layout aligns with any HTML structure-related test cases. This helps you meet all DOM and layout requirements during validation. </li>
-                        <li><strong>Step 4:</strong> Click the <code>Output</code> button to view your output.</li>
-                        <strong>You click on the <code>Guidelines</code> button in the assessment page if you have any queries. </strong>
-                      </ul>
-                    </div>
+                <GuidelinesSideBar />
+            </div>
         </div>
     </div>
 )}
@@ -1272,8 +1273,12 @@ useEffect(() => {
 {isSubmitting && (
    <div className="fixed inset-0 z-50 flex items-center  justify-center bg-black bg-opacity-50">
     <div className="bg-white p-6 rounded-lg shadow-lg text-center w-[450px]">
-    <h2 className="text-2xl font-semibold text-blue-600 mb-2">Executing Your Assessment</h2>
-    <p className="text-gray-700">Hold on while we validate your code...</p>
+    <h2 className="text-2xl font-semibold text-blue-600 mb-2">
+        {isSubmittingFinal ? 'Submitting Your Assessment' : 'Executing Your Assessment'}
+    </h2>
+    <p className="text-gray-700">
+        {isSubmittingFinal ? 'Please wait while we submit and evaluate your code…' : 'Hold on while we validate your code...'}
+    </p>
         <div className="mt-4">
             <svg className="mx-auto h-8 w-8 text-blue-500 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
