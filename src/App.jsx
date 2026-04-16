@@ -16,6 +16,7 @@ import Sidebarcomp from './Admin/sidenav';
 import CreateTest from './Admin/pages/CreateTest';
 import ViewTest from './Admin/pages/ViewTest';
 import ClientManagement from './Admin/pages/ClientManagement';
+import HomePage from './HomePage/HomePage';
 
 // import Login from './components/Login/Login';
 // import Menu from './components/Menu/Menu';
@@ -57,7 +58,8 @@ function App() {
    <>
     <BrowserRouter>
       <Routes>
-        <Route path='/' element={[<Login/>]}/>
+        <Route path='/' element={[<HomePage/>]}/>
+        <Route path='/login' element={[<Login/>]}/>
        
         <Route path='/guidelines/:id/:empNo' element={[<Menu/>,<GuidelinesPage/>]}/>
         
