@@ -4,12 +4,12 @@ import EnvironmentSetup from './EnvironmentSetup.png';
 import configuration from './configuration.png';
 import ribbon from './ribbon.png';
 import guide from './guide_18823709.png';
-import GuidelinesSideBarWithoutHead from './GuidelinesSideBarWithoutHead';
+import GuidelinesComponent from './GuidelinesComponent';
 import { useEffect } from "react";
 import axios from "axios";
 
 import { useLocation, useNavigate } from "react-router-dom"
-import { enterFullscreen } from '../utils/useAssessmentProtection';
+
 import { useTabClaim } from '../utils/useTabClaim';
 
 export default function GuidelinesPage() {
@@ -18,6 +18,7 @@ export default function GuidelinesPage() {
   const navigate = useNavigate();
 
   const [payload, setPayload] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [alreadySubmitted, setAlreadySubmitted] = useState(false);
   const [tabBlocked, setTabBlocked] = useState(false);
   const [activeTabId, setActiveTabId] = useState(null);
@@ -55,6 +56,7 @@ export default function GuidelinesPage() {
         // Check if the user has already submitted the assessment
         if (data.payload.submitted === 1) {
           setAlreadySubmitted(true);
+          setLoading(false);
           return;
         }
 
@@ -93,6 +95,7 @@ export default function GuidelinesPage() {
           );
           if (claimRes.data.status === 'blocked') {
             setTabBlocked(true);
+            setLoading(false);
             return;
           }
           // 'allowed' or 'submitted' — proceed; submitted is handled below
@@ -104,6 +107,8 @@ export default function GuidelinesPage() {
         setActiveTabId(localTabId);
         setActiveTokenId(data.payload.id);
         // ────────────────────────────────────────────────────────────────
+
+        setLoading(false);
 
         // Check if assessment was already started - redirect to workspace
         if (data.payload.assessment_started === 1 && data.payload.workspace_url) {
@@ -125,6 +130,7 @@ export default function GuidelinesPage() {
 
       } catch (err) {
         console.error("Token resolve failed:", err);
+        setLoading(false);
       }
     };
 
@@ -156,6 +162,18 @@ export default function GuidelinesPage() {
     }
   
     const base64 = btoa(JSON.stringify(paramData)); 
+
+  // Show loading spinner while resolving the token
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="inline-block h-12 w-12 animate-spin rounded-full border-4 border-solid border-green-600 border-r-transparent mb-4"></div>
+          <p className="text-gray-600 text-lg">Verifying your assessment link...</p>
+        </div>
+      </div>
+    );
+  }
 
   // Show "already submitted" screen if the user has already completed the assessment
   if (alreadySubmitted) {
@@ -204,76 +222,102 @@ export default function GuidelinesPage() {
   return (
     <>
 
-      <div className="max-w-4xl mx-auto p-6 bg-white shadow-md rounded-md mt-10">
-        <h1 className="text-2xl font-bold text-center text-gray-800 mb-6 headingcolor">
-          Candidate Instructions – Front-End Assessment (Pre-Test Notes)
+      <div className="max-w-6xl mx-auto p-6 bg-white shadow-md rounded-md mt-10">
+        <h1 className="text-2xl !font-bold text-center !text-[#001e98] mb-6 ">
+          Front-End Assessment
+        </h1>
+        <h1 className="text-2xl !font-bold text-center !text-[#001e98] mb-6">
+          Candidate Instructions (Pre-Test Notes)
         </h1>
 
-        <p className="text-gray-700 mb-6">
+        <p className="text-gray-700 mb-6 font-semibold text-lg text-center">
           Welcome! Before you begin your front-end assessment, please take a moment to read these instructions carefully. This will help you make the best use of your time and the embedded coding environment.
         </p>
 
         <section className="mb-6">
           <div className="shadow-md p-4 mb-4 animation">
-            <h2 className="text-xl font-semibold text-gray-800 mb-2 headingcolor">
+            <h3 className="text-xl !font-bold !text-gray-800 mb-2">
               <img src={EnvironmentSetup} alt="Environment Icon" className="w-8 h-8 inline-block" /> Environment Setup
-            </h2>
-            <ul className="list-disc list-inside text-gray-700 space-y-1">
+            </h3>
+            <ul className="list-disc list-inside text-gray-800 space-y-1 !text-[17px]">
               <li>You will be working in a browser-based VS Code environment (codeserver).</li>
-              <li>The project is preconfigured with two frameworks: React and Vue.js.</li>
+              <li>The project is preconfigured with React framework.</li>
               <li>You may choose either React or Vue.js for this task — select the one you are most comfortable with.</li>
               <li>For styling, use the shared stylesheet: <code>App.css</code>.</li>
             </ul>
           </div>
           <div className="shadow-md p-4 animation">
-            <h2 className="text-xl font-semibold text-gray-800 mb-2 headingcolor">
+            <h3 className="text-xl !font-bold !text-gray-800 mb-2">
               <img src={configuration} alt="configuration Icon" className="w-8 h-8 inline-block" /> Configuration Setup
-            </h2>
-            <GuidelinesSideBarWithoutHead />
+            </h3>
+            <div className=" border-l-5 ml-3 !border-[#2ab793] p-3 mb-4 rounded-r-md">
+              <p className="text-black-800 !font-bold text-lg flex items-center gap-2">
+                Important Note
+              </p>
+              <p className="text-black-700 !text-[15px] mt-1">
+                All commands such as <code className="bg-yellow-100 px-1 rounded font-mono text-red-600">npm install</code> and <code className="bg-yellow-100 px-1 rounded font-mono text-red-600">npm run dev</code> must be executed <strong>within the assessment environment</strong> (the browser-based VS Code terminal), <strong>not on your local machine</strong>.
+              </p>
+            </div>
+            <div className="flex items-center justify-center">
+              <GuidelinesComponent />
+            </div>
+            
           </div>
         </section>
 
         <section className="mb-6 shadow-md p-4 animation">
-          <h2 className="text-xl font-semibold text-gray-800 mb-2 headingcolor">
+          <h2 className="text-xl !font-bold !text-gray-800 mb-2">
             <img src={ribbon} alt="ribbon Icon" className="w-8 h-8 inline-block" /> Submission Guidelines
           </h2>
-          <ul className="list-disc list-inside text-gray-700 space-y-1">
+          <ul className="list-disc list-inside text-gray-800 space-y-1 text-[17px]">
             <li>Once you complete the task, save all changes.</li>
-            <li>Press the "Submit Assessment" button to run validation.</li>
-            <li>You can submit the code multiple times within the 30-minute time limit to check your results.</li>
-            <li>Your final submission before the deadline will be considered for evaluation.</li>
+            <li>Click "Run Test" button to run validation.</li>
+            <li>You can run the code multiple times within the 30-minute time limit to check your code.</li>
+            <li>Your final submission by clicking the "Submit Assignment" button before the deadline will be considered for evaluation.</li>
           </ul>
         </section>
 
         <section className="mb-8 shadow-md p-4 animation">
-          <h2 className="text-xl font-semibold text-gray-800 mb-2 headingcolor">
+          <h2 className="text-xl !font-bold !text-gray-800 mb-2">
             <img src={guide} alt="Enviroguidenment Icon" className="w-8 h-8 inline-block" /> General Guidelines
           </h2>
-          <ul className="list-disc list-inside text-gray-700 space-y-1">
-            <li>Use only the provided libraries (React or Vue). Do not install third-party libraries like Bootstrap or Tailwind.</li>
-            <li>Follow clean coding practices — use meaningful class names, maintain indentation, and add comments where needed.</li>
+          <ul className="list-disc list-inside text-gray-800 space-y-1 text-[17px]">
+            <li>Use only the provided libraries / Frameworks such as React. Do not install third-party libraries like Bootstrap or Tailwind.</li>
+            <li>Follow clean coding practices: use meaningful class names, maintain indentation, and add comments where needed.</li>
             <li>Ensure your layout is responsive and follows the grid structure as specified in the task.</li>
           </ul>
-          <p className="mt-4 text-center text-gray-700 text-success text-bold">
-            All the best — build something neat and clean.
+          <p className="mt-4 text-center text-success !font-bold">
+            All the best! Build something neat and clean.
           </p>
         </section>
 
-        <div className="mt-4">
+        <div className="mt-4 flex justify-center">
             <button 
-              onClick={async () => {
-                try {
-                  await enterFullscreen();
-                } catch (e) {
-                  console.error('Failed to enter fullscreen:', e);
-                }
-                sessionStorage.setItem('assessmentFullscreen', 'true');
+              onClick={() => {
+                // Fire workspace setup in background (fire-and-forget)
+                const framework = 'react';
+                const dPort = String(payload?.docker_port);
+                const oPort = String(payload?.output_port);
+                fetch(`${import.meta.env.VITE_BACKEND_API_URL}/run-script`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    userId: payload?.id,
+                    empNo: payload?.aon_id,
+                    userName: payload?.aon_id,
+                    question: payload?.question_id,
+                    framework,
+                    dockerPort: dPort,
+                    outputPort: oPort,
+                  }),
+                }).catch(err => console.error('Workspace setup error:', err));
+
                 sessionStorage.setItem('tabSwitchCount', '0');
                 navigate(`/question/${base64}`);
               }}
-              className="w-full bg-green-600 text-white py-3 px-6 rounded-md shadow hover:bg-green-700 transition duration-200"
+              className="w-1/2 bg-blue-900 text-white !font-semibold py-3 px-6 !rounded-md shadow hover:bg-blue-700 transition duration-200"
             >
-              Start Assessment
+              Acknowlege and Proceed
             </button>
         </div>
         

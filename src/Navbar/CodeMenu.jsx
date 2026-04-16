@@ -43,7 +43,8 @@ export default function CodeMenu() {
     const [logData, setLogData] = useState(null);
 
     // Auto-submit callback for tab switch protection
-    const handleAutoSubmit = useCallback(async () => {
+    // reason: 'timer_expired_with_dev_server' | 'timer_expired_no_dev_server' | 'tab_switch' (resolved inside)
+    const handleAutoSubmit = useCallback(async (reason = 'timer_expired') => {
         if (submittingRef.current) return;
         submittingRef.current = true;
         setIsSubmitting(true);
@@ -52,7 +53,6 @@ export default function CodeMenu() {
 
         if (userRole === '3' || userRole === '4') {
             try {
-                // First try submitting with assessment (autoSubmit flag for timer-expired message)
                 const response = await fetch(`${import.meta.env.VITE_BACKEND_API_URL}/submit-final`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -62,19 +62,23 @@ export default function CodeMenu() {
                         outputPort: outputPort,
                         userQuestion: userQuestion,
                         autoSubmit: true,
+                        reason: reason,
                     }),
                 });
                 const data = await response.json();
 
                 if (data.devServerNotRunning) {
-                    // Dev server not running → submit without assessment
+                    // Dev server not running — determine the right message based on trigger
+                    const noDevReason = reason === 'tab_switch'
+                        ? 'The candidate was auto-submitted due to repeated tab switching and the development server was not running at the time of submission.'
+                        : 'The timer has expired and the candidate did not start the development server. No assessment was evaluated.';
                     console.log('Dev server not running during auto-submit, submitting without assessment...');
                     const noAssessResponse = await fetch(`${import.meta.env.VITE_BACKEND_API_URL}/submit-no-assessment`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             aonId: aonId,
-                            message: "The timer has run out also candidate do not attempted the test by following the guidelines",
+                            message: noDevReason,
                         }),
                     });
                     const noAssessData = await noAssessResponse.json();
@@ -120,6 +124,22 @@ export default function CodeMenu() {
 
 
     console.log(notRunning);
+
+    // Close question/guidelines panels when the user clicks inside the editor iframe.
+    // Clicking inside an iframe moves focus there, firing window.blur on the parent.
+    useEffect(() => {
+        const handleWindowBlur = () => {
+            // setTimeout 0 lets the browser update document.activeElement first
+            setTimeout(() => {
+                if (document.activeElement && document.activeElement.tagName === 'IFRAME') {
+                    setShowGuidelines(false);
+                    setShowQuestion(false);
+                }
+            }, 0);
+        };
+        window.addEventListener('blur', handleWindowBlur);
+        return () => window.removeEventListener('blur', handleWindowBlur);
+    }, []);
     
     useEffect(() => {
         const fetchUserLog = async () => {
@@ -198,7 +218,7 @@ export default function CodeMenu() {
                 timer: 4000,
                 timerProgressBar: true,
             }).then(() => {
-                handleAutoSubmit();
+                handleAutoSubmit('timer_expired');
             });
         }
     }, [timeLeft, handleAutoSubmit]);
@@ -259,7 +279,7 @@ useEffect(() => {
   // Heartbeat with a short timeout so we detect offline quickly
   const checkServerHeartbeat = async () => {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 3000);
+    const timeoutId = setTimeout(() => controller.abort(), 1500);
     try {
       const response = await fetch(`${import.meta.env.VITE_BACKEND_API_URL}/heartbeat`, {
         method: "GET",
@@ -278,15 +298,20 @@ useEffect(() => {
     }
   };
 
-  const intervalId = setInterval(checkServerHeartbeat, 3000);
+  const intervalId = setInterval(checkServerHeartbeat, 1000);
+
+  const handleOffline = () => { goOffline(); };
 
   window.addEventListener("online", goOnline);
-  window.addEventListener("offline", goOffline);
+  window.addEventListener("offline", handleOffline);
+
+  // Run one heartbeat immediately on mount so we don't wait for the first interval
+  checkServerHeartbeat();
 
   return () => {
     clearInterval(intervalId);
     window.removeEventListener("online", goOnline);
-    window.removeEventListener("offline", goOffline);
+    window.removeEventListener("offline", handleOffline);
   };
 }, []);
 

@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import A1L1Q03Question from "./A1L1Q3Question";
 import A1L1Q02Question from "./A1L1Q2Question";
 import A1L1Q01Question from "./A1L1Q1Question";
-import { useAssessmentProtection } from '../utils/useAssessmentProtection';
+import { useAssessmentProtection, enterFullscreen } from '../utils/useAssessmentProtection';
 import { useTabClaim } from '../utils/useTabClaim';
 
 export default function QuestionsMain() {
@@ -12,10 +12,9 @@ export default function QuestionsMain() {
     const [testdata, setTestdata] = useState([]);
     const [htmlContent, setHtmlContent] = useState('');
     const [isButtonEnabled, setIsButtonEnabled] = useState(false);
-    const [timeLeft, setTimeLeft] = useState(6);
+    const [timeLeft, setTimeLeft] = useState(30);
     const [showTable, setShowTable] = useState(false);
     const [question, setQuestion] = useState("");
-    const [redirectCountdown, setRedirectCountdown] = useState(null);
     const [isAuthorized, setIsAuthorized] = useState(false);
     const [reactOrVue, setReactOrVue] = useState('react');
     sessionStorage.setItem("framework", reactOrVue);
@@ -50,6 +49,9 @@ export default function QuestionsMain() {
     // console.log(reactOrVue)
     useEffect(() => {
         window.scrollTo(0, 0);
+        // Enter fullscreen on the questions page
+        sessionStorage.setItem('assessmentFullscreen', 'true');
+        enterFullscreen().catch(err => console.error('Failed to enter fullscreen:', err));
     },[])
 
     useEffect(() => {
@@ -84,53 +86,9 @@ export default function QuestionsMain() {
 
     
     
-      const handleStartAssessmentII = async (selectedFramework) => {
+      const handleStartAssessmentII = (selectedFramework) => {
         const workspaceUrl = `/workspace/${id}/${selectedFramework}/${userQuestion}/${dPort}/${oPort}`;
-        
-        let countdown = 20;
-        setRedirectCountdown(countdown); // Show "Redirecting in 10 seconds..."
-    
-        const interval = setInterval(() => {
-            countdown -= 1;
-            setRedirectCountdown(countdown);
-    
-            if (countdown === 0) {
-                clearInterval(interval);
-                navigate(workspaceUrl, { replace: true });
-            }
-        }, 1000);
-
-        try {
-            const res = await fetch(`${import.meta.env.VITE_BACKEND_API_URL}/run-script`, 
-                {
-                    method: 'POST',
-                    headers: {
-                      'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                      userId: userId,
-                      empNo: aon_id,
-                      userName: aon_id,
-                      question: userQuestion,
-                    framework: selectedFramework,
-                    dockerPort: dPort,
-                    outputPort: oPort,
-                    }),
-                  }
-            );
-            const data = await res.json();
-
-            if (res.ok && data.status === 'success') {
-                // console.log('Script output:', data.output);  // Use `data.output` based on backend structure
-                // window.location.href = `/workspace/${id}/${selectedFramework}`;
-              } else {
-                console.warn('Backend responded with error:', data);
-                // alert('Script failed to start the assessment.');
-              }
-          } catch (err) {
-            console.error(err);
-            // alert('Something went wrong xstarting the assessment.');
-          }
+        navigate(workspaceUrl, { replace: true });
     };
     
 
@@ -246,6 +204,15 @@ export default function QuestionsMain() {
                                 <option value="vue">Vue</option>    
                             </select>
                         </div> */}
+
+                        <div className="mt-4 flex justify-center">
+                                <button 
+                                    onClick={()=>handleStartAssessmentII(reactOrVue)}
+                                    className={`w-1/2 !font-semibold py-3 px-6 !rounded-md shadow transition duration-200 ${isButtonEnabled && reactOrVue ? "bg-green-500 hover:bg-green-700 text-white cursor-pointer" : " cursor-not-allowed bg-gray-200 text-black"}`} 
+                                    disabled={!isButtonEnabled || !reactOrVue}>
+                                    {isButtonEnabled ? 'Start Assessment' : `Start Assessment (${timeLeft}s)`}
+                                </button>
+                            </div>
                         
                         <div className="md:mx-20 md:flex justify-center md:justify-between items-center">    
                             {/* <Link to={`/workspace/${id}`}> */}
@@ -253,33 +220,7 @@ export default function QuestionsMain() {
                             {/* </Link> */}
                             {/* <button onClick={handleStartAssessment} className="">Start Assessment</button> */}
 
-                                <button 
-                                    onClick={()=>handleStartAssessmentII(reactOrVue)}
-                                    className={`bg-blue-500  px-4 py-2 rounded-md lg:float-right mt-4 ${isButtonEnabled && reactOrVue ? "cursor-pointer text-white" : "cursor-not-allowed bg-gray-200 text-black"}`} 
-                                    disabled={!isButtonEnabled || !reactOrVue}>
-                                    Start Assessment
-                                </button>
-
-                                {/* {redirectCountdown !== null && redirectCountdown > 0 && (
-                                <div className="text-sm text-gray-700 mt-2">
-                                    Redirecting in {redirectCountdown} second{redirectCountdown > 1 ? 's' : ''}…
-                                </div>
-                                )} */}
-
-                            {redirectCountdown !== null && redirectCountdown > 0 && (
-                            <div className="fixed inset-0 z-50 flex items-center  justify-center bg-black bg-opacity-50">
-                                <div className="bg-white p-6 rounded-lg shadow-lg text-center animate-pulse w-[450px]">
-                                <h2 className="text-2xl font-semibold text-blue-600 mb-2">Creating Workspace</h2>
-                                <p className="text-gray-700">Please wait while we set things up for you…</p>
-                                <div className="mt-4">
-                                    <svg className="mx-auto h-8 w-8 text-blue-500 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
-                                    </svg>
-                                </div>
-                                </div>
-                            </div>
-                            )}
+                                
 
                         </div>
                        

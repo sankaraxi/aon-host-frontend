@@ -297,7 +297,10 @@ function renderContent() {
 }
   
     return (
-        <div className="overflow-hidden" style={{ height: 'calc(100vh - 80px)' }}>
+        <div
+          className="overflow-hidden"
+          style={{ height: 'calc(100vh - 80px)' }}
+        >
         {
          renderContent()
         }

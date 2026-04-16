@@ -44,6 +44,9 @@ export function useAssessmentProtection({
   enabled = true,
   redirectUrl = null,
 } = {}) {
+  // Dev mode: skip all tab-switch detection when VITE_DEV_MODE is "true"
+  const devMode = import.meta.env.VITE_DEV_MODE === 'true';
+
   const isProcessingRef = useRef(false);
   const onAutoSubmitRef = useRef(onAutoSubmit);
 
@@ -53,7 +56,11 @@ export function useAssessmentProtection({
   }, [onAutoSubmit]);
 
   const handleVisibilityChange = useCallback(() => {
-    if (!enabled || isProcessingRef.current) return;
+    if (!enabled || devMode || isProcessingRef.current) return;
+
+    // If the page is being refreshed/navigated away, visibilitychange fires 'hidden'
+    // just like a real tab switch. Skip counting in that case.
+    if (sessionStorage.getItem('_isUnloading') === 'true') return;
 
     if (document.visibilityState === 'hidden') {
       const count =
@@ -76,7 +83,7 @@ export function useAssessmentProtection({
             timer: 3000,
             timerProgressBar: true,
           });
-          onAutoSubmitRef.current();
+          onAutoSubmitRef.current('tab_switch');
         } else {
           // Not on code editor – just logout
           // Capture destination BEFORE clearing sessionStorage
@@ -135,10 +142,14 @@ export function useAssessmentProtection({
         });
       }
     }
-  }, [enabled, isCodeEditorPage]);
+  }, [enabled, devMode, isCodeEditorPage]);
 
   useEffect(() => {
-    if (!enabled) return;
+    if (!enabled || devMode) return;
+
+    // After a refresh the page reloads fresh — clear the unload flag so
+    // subsequent real tab switches are detected correctly.
+    sessionStorage.removeItem('_isUnloading');
 
     // Try to maintain fullscreen on mount (works if triggered by prior user gesture)
     if (
@@ -148,10 +159,18 @@ export function useAssessmentProtection({
       enterFullscreen().catch(() => {});
     }
 
+    // Mark the session as "unloading" on refresh/navigation so the
+    // visibilitychange handler does not count it as a tab switch.
+    const handleBeforeUnload = () => {
+      sessionStorage.setItem('_isUnloading', 'true');
+    };
+
     document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('beforeunload', handleBeforeUnload);
 
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('beforeunload', handleBeforeUnload);
     };
   }, [enabled, handleVisibilityChange]);
 }

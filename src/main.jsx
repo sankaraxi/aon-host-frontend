@@ -10,6 +10,11 @@ if (existingToken) {
   axios.defaults.headers.common['Authorization'] = `Bearer ${existingToken}`;
 }
 
+// Prevent copy, cut, and context menu globally to avoid malpractice
+document.addEventListener('copy', (e) => e.preventDefault());
+document.addEventListener('cut', (e) => e.preventDefault());
+document.addEventListener('contextmenu', (e) => e.preventDefault());
+
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <App />
