@@ -1282,12 +1282,14 @@ useEffect(() => {
 
 {notRunning && (
     <div 
+        onClick={() => setIsModalClosing(true)}
         className={`fixed inset-0 flex justify-center items-center z-50 transition-opacity duration-400 p-4 ${
             isModalClosing ? 'opacity-0' : 'opacity-100'
         }`}
         style={{backgroundColor: 'rgba(0, 0, 0, 0.5)'}}
     >
         <div 
+            onClick={(e) => e.stopPropagation()}
             className={`relative bg-white w-full max-w-2xl rounded-lg shadow-xl transform transition-all duration-400 ${
                 isModalClosing 
                     ? 'opacity-0 scale-90 -translate-y-4' 
