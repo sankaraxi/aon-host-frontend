@@ -87,6 +87,10 @@ export default function QuestionsMain() {
     
     
       const handleStartAssessmentII = (selectedFramework) => {
+        // Reset the tab-switch counter before entering the workspace so that any
+        // false positives accumulated during QuestionsMain (e.g. from the fullscreen
+        // transition) do not carry over and cause an immediate auto-submit.
+        sessionStorage.setItem('tabSwitchCount', '0');
         const workspaceUrl = `/workspace/${id}/${selectedFramework}/${userQuestion}/${dPort}/${oPort}`;
         navigate(workspaceUrl, { replace: true });
     };

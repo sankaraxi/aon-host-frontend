@@ -10,14 +10,19 @@ import {
   faServer,
   faCheckCircle,
   faTimesCircle,
-  faLink
+  faLink,
+  faClipboardList,
+  faSave
 } from "@fortawesome/free-solid-svg-icons";
 import axios from "axios";
 
+const API = import.meta.env.VITE_BACKEND_API_URL;
+
 function ClientManagement() {
   const [clients, setClients] = useState([]);
-  const [slots, setSlots] = useState([]);
-  const [clientAssignments, setClientAssignments] = useState([]);
+  const [businesses, setBusinesses] = useState([]);
+  const [allQuestions, setAllQuestions] = useState([]);
+  const [portSlotStats, setPortSlotStats] = useState({ total: 0, utilized: 0, free: 0 });
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showAssignModal, setShowAssignModal] = useState(false);
@@ -25,23 +30,25 @@ function ClientManagement() {
   const [newClient, setNewClient] = useState({
     client_name: "",
     client_code: "",
-    description: ""
+    description: "",
+    business_id: ""
   });
-  const [selectedSlots, setSelectedSlots] = useState([]);
+  const [selectedQuestions, setSelectedQuestions] = useState([]);
   const [resettingSlots, setResettingSlots] = useState(false);
 
-  // Fetch all data
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [clientsRes, slotsRes, assignmentsRes] = await Promise.all([
-        axios.get(`${import.meta.env.VITE_BACKEND_API_URL}/clients`),
-        axios.get(`${import.meta.env.VITE_BACKEND_API_URL}/slots`),
-        axios.get(`${import.meta.env.VITE_BACKEND_API_URL}/client-assignments`)
+      const [clientsRes, bizRes, questionsRes, portStatsRes] = await Promise.all([
+        axios.get(`${API}/clients`),
+        axios.get(`${API}/businesses`),
+        axios.get(`${API}/assessment-questions`),
+        axios.get(`${API}/port-slots/stats`)
       ]);
       setClients(clientsRes.data);
-      setSlots(slotsRes.data);
-      setClientAssignments(assignmentsRes.data);
+      setBusinesses(bizRes.data);
+      setAllQuestions(questionsRes.data);
+      setPortSlotStats(portStatsRes.data);
     } catch (error) {
       console.error("Error fetching data:", error);
     } finally {
@@ -53,17 +60,18 @@ function ClientManagement() {
     fetchData();
   }, []);
 
-  // Add new client
   const handleAddClient = async () => {
     if (!newClient.client_name || !newClient.client_code) {
       alert("Please fill in all required fields");
       return;
     }
-
     try {
-      await axios.post(`${import.meta.env.VITE_BACKEND_API_URL}/clients`, newClient);
+      await axios.post(`${API}/clients-v2`, {
+        ...newClient,
+        business_id: newClient.business_id || null
+      });
       setShowAddModal(false);
-      setNewClient({ client_name: "", client_code: "", description: "" });
+      setNewClient({ client_name: "", client_code: "", description: "", business_id: "" });
       fetchData();
       alert("Client added successfully!");
     } catch (error) {
@@ -72,14 +80,12 @@ function ClientManagement() {
     }
   };
 
-  // Delete client
   const handleDeleteClient = async (clientId) => {
-    if (!confirm("Are you sure you want to delete this client? This will also remove all slot assignments.")) {
+    if (!confirm("Are you sure you want to delete this client? This will also remove all question assignments.")) {
       return;
     }
-
     try {
-      await axios.delete(`${import.meta.env.VITE_BACKEND_API_URL}/clients/${clientId}`);
+      await axios.delete(`${API}/clients/${clientId}`);
       fetchData();
       alert("Client deleted successfully!");
     } catch (error) {
@@ -88,69 +94,45 @@ function ClientManagement() {
     }
   };
 
-  // Open assign slots modal
-  const handleOpenAssignModal = (client) => {
+  const handleOpenAssignModal = async (client) => {
     setSelectedClient(client);
-    // Pre-select already assigned slots for this client
-    const assignedSlotIds = clientAssignments
-      .filter(a => a.client_id === client.client_id)
-      .map(a => a.slot_id);
-    setSelectedSlots(assignedSlotIds);
+    try {
+      const res = await axios.get(`${API}/client-questions/${client.client_id}`);
+      setSelectedQuestions(res.data.map(q => q.question_id));
+    } catch {
+      setSelectedQuestions([]);
+    }
     setShowAssignModal(true);
   };
 
-  // Toggle slot selection
-  const toggleSlotSelection = (slotId) => {
-    setSelectedSlots(prev => 
-      prev.includes(slotId) 
-        ? prev.filter(id => id !== slotId)
-        : [...prev, slotId]
+  const toggleQuestionSelection = (qid) => {
+    setSelectedQuestions(prev => 
+      prev.includes(qid) 
+        ? prev.filter(id => id !== qid)
+        : [...prev, qid]
     );
   };
 
-  // Save slot assignments
   const handleSaveAssignments = async () => {
     try {
-      await axios.post(`${import.meta.env.VITE_BACKEND_API_URL}/client-assignments`, {
+      await axios.post(`${API}/client-questions`, {
         client_id: selectedClient.client_id,
-        slot_ids: selectedSlots
+        question_ids: selectedQuestions
       });
       setShowAssignModal(false);
       setSelectedClient(null);
-      setSelectedSlots([]);
+      setSelectedQuestions([]);
       fetchData();
-      alert("Slots assigned successfully!");
+      alert("Questions assigned successfully!");
     } catch (error) {
-      console.error("Error assigning slots:", error);
-      alert(error.response?.data?.error || "Failed to assign slots");
+      console.error("Error assigning questions:", error);
+      alert(error.response?.data?.error || "Failed to assign questions");
     }
   };
 
-  // Get assigned slots count for a client
-  const getAssignedSlotsCount = (clientId) => {
-    return clientAssignments.filter(a => a.client_id === clientId).length;
-  };
-
-  // Get available slots count for a client
-  const getAvailableSlotsCount = (clientId) => {
-    const assignedSlots = clientAssignments.filter(a => a.client_id === clientId);
-    return assignedSlots.filter(a => {
-      const slot = slots.find(s => s.id === a.slot_id);
-      return slot && slot.is_utilized === 0;
-    }).length;
-  };
-
-  // Check if slot is assigned to any client
-  const isSlotAssigned = (slotId) => {
-    return clientAssignments.some(a => a.slot_id === slotId);
-  };
-
-  // Get client name for an assigned slot
-  const getSlotClientName = (slotId) => {
-    const assignment = clientAssignments.find(a => a.slot_id === slotId);
-    if (!assignment) return null;
-    const client = clients.find(c => c.client_id === assignment.client_id);
-    return client?.client_name || "Unknown";
+  const getBusinessName = (bizId) => {
+    const biz = businesses.find(b => b.business_id === bizId);
+    return biz ? biz.business_name : "—";
   };
 
   return (
@@ -194,9 +176,9 @@ function ClientManagement() {
                         <th>S.No</th>
                         <th>Client Name</th>
                         <th>Client Code</th>
+                        {/* <th>Business</th> */}
                         <th>Description</th>
-                        <th>Assigned Questions</th>
-                        <th>Available Slots</th>
+                        <th>Questions Assigned</th>
                         <th>Status</th>
                         <th>Actions</th>
                       </tr>
@@ -212,16 +194,17 @@ function ClientManagement() {
                                 {client.client_code}
                               </code>
                             </td>
+                            {/* <td>{getBusinessName(client.business_id)}</td> */}
                             <td>{client.description || "-"}</td>
                             <td>
-                              <span className="badge bg-info">
-                                {getAssignedSlotsCount(client.client_id)}
-                              </span>
-                            </td>
-                            <td>
-                              <span className="badge bg-success">
-                                {getAvailableSlotsCount(client.client_id)}
-                              </span>
+                              <button
+                                className="btn btn-sm btn-outline-info"
+                                onClick={() => handleOpenAssignModal(client)}
+                                title="Assign Questions"
+                              >
+                                <FontAwesomeIcon icon={faClipboardList} className="me-1" />
+                                Manage
+                              </button>
                             </td>
                             <td>
                               {client.is_active ? (
@@ -238,19 +221,12 @@ function ClientManagement() {
                             </td>
                             <td>
                               <button
-                                className="btn btn-sm btn-outline-primary me-2"
-                                onClick={() => handleOpenAssignModal(client)}
-                                title="Assign Slots"
-                              >
-                                <FontAwesomeIcon icon={faLink} />
-                              </button>
-                              {/* <button
                                 className="btn btn-sm btn-outline-danger"
                                 onClick={() => handleDeleteClient(client.client_id)}
                                 title="Delete Client"
                               >
                                 <FontAwesomeIcon icon={faTrash} />
-                              </button> */}
+                              </button>
                             </td>
                           </tr>
                         ))
@@ -267,21 +243,21 @@ function ClientManagement() {
               </div>
             </div>
 
-            {/* Slots Overview */}
-            <div className="card shadow-sm">
+            {/* Port Slots Overview */}
+            {/* <div className="card shadow-sm">
               <div className="card-header bg-secondary text-white d-flex align-items-center justify-content-between">
                 <h5 className="mb-0 d-flex align-items-center gap-2">
                   <FontAwesomeIcon icon={faServer} className="me-2" />
-                  Available Questions Overview
+                  Port Slots Overview
                 </h5>
                 <button
                   className="btn btn-outline-light btn-sm"
                   onClick={async () => {
-                    if (!confirm("Reset all slots to unused?")) return;
+                    if (!confirm("Reset all port slots to unused?")) return;
                     try {
                       setResettingSlots(true);
-                      await axios.post(`${import.meta.env.VITE_BACKEND_API_URL}/slots/reset`);
-                      alert("Reset all slot utilizations.");
+                      await axios.post(`${API}/port-slots/reset`);
+                      alert("Reset all port slot utilizations.");
                       fetchData();
                     } catch (error) {
                       console.error("Error resetting slots:", error);
@@ -296,52 +272,28 @@ function ClientManagement() {
                 </button>
               </div>
               <div className="card-body">
-                <div className="row">
-                  {slots.map((slot) => (
-                    <div key={slot.id} className="col-md-3 col-sm-6 mb-3">
-                      <div 
-                        className={`card h-100 ${
-                          slot.is_utilized 
-                            ? "border-danger" 
-                            : isSlotAssigned(slot.id) 
-                              ? "border-primary" 
-                              : "border-success"
-                        }`}
-                      >
-                        <div className="card-body p-2">
-                          <div className="d-flex justify-content-between align-items-center">
-                            <small className="fw-bold">Question {slot.id}</small>
-                            <span 
-                              className={`badge ${
-                                slot.is_utilized 
-                                  ? "bg-danger" 
-                                  : isSlotAssigned(slot.id) 
-                                    ? "bg-primary" 
-                                    : "bg-success"
-                              }`}
-                            >
-                              {slot.is_utilized 
-                                ? "In Use" 
-                                : isSlotAssigned(slot.id) 
-                                  ? "Assigned" 
-                                  : "Free"}
-                            </span>
-                          </div>
-                          {/* <small className="text-muted d-block">
-                            Port: {slot.docker_port}/{slot.frontend_port}
-                          </small> */}
-                          {isSlotAssigned(slot.id) && (
-                            <small className="text-primary d-block">
-                              Client: {getSlotClientName(slot.id)}
-                            </small>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+                <div className="row text-center">
+                  <div className="col-md-4">
+                    <div className="fs-3 fw-bold text-primary">{portSlotStats.total || 0}</div>
+                    <div className="text-muted">Total Port Slots</div>
+                  </div>
+                  <div className="col-md-4">
+                    <div className="fs-3 fw-bold text-success">{portSlotStats.free || 0}</div>
+                    <div className="text-muted">Free</div>
+                  </div>
+                  <div className="col-md-4">
+                    <div className="fs-3 fw-bold text-danger">{portSlotStats.utilized || 0}</div>
+                    <div className="text-muted">In Use</div>
+                  </div>
+                </div>
+                <div className="progress mt-3" style={{ height: 10 }}>
+                  <div 
+                    className="progress-bar bg-danger" 
+                    style={{ width: `${portSlotStats.total > 0 ? (portSlotStats.utilized / portSlotStats.total) * 100 : 0}%` }} 
+                  />
                 </div>
               </div>
-            </div>
+            </div> */}
           </>
         )}
 
@@ -383,6 +335,19 @@ function ClientManagement() {
                     </small>
                   </div>
                   <div className="mb-3">
+                    <label className="form-label">Business</label>
+                    <select
+                      className="form-select"
+                      value={newClient.business_id}
+                      onChange={(e) => setNewClient({...newClient, business_id: e.target.value})}
+                    >
+                      <option value="">-- No Business --</option>
+                      {businesses.map(b => (
+                        <option key={b.business_id} value={b.business_id}>{b.business_name}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="mb-3">
                     <label className="form-label">Description</label>
                     <textarea
                       className="form-control"
@@ -414,14 +379,15 @@ function ClientManagement() {
           </div>
         )}
 
-        {/* Assign Slots Modal */}
+        {/* Assign Questions Modal */}
         {showAssignModal && selectedClient && (
           <div className="modal show d-block" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
-            <div className="modal-dialog modal-lg">
+            <div className="modal-dialog">
               <div className="modal-content">
                 <div className="modal-header">
                   <h5 className="modal-title">
-                    Assign Slots to: {selectedClient.client_name}
+                    <FontAwesomeIcon icon={faClipboardList} className="me-2" />
+                    Assign Questions to: {selectedClient.client_name}
                   </h5>
                   <button 
                     type="button" 
@@ -429,69 +395,43 @@ function ClientManagement() {
                     onClick={() => {
                       setShowAssignModal(false);
                       setSelectedClient(null);
-                      setSelectedSlots([]);
+                      setSelectedQuestions([]);
                     }}
                   ></button>
                 </div>
                 <div className="modal-body">
                   <p className="text-muted mb-3">
-                    Select the questions you want to assign to this client. 
-                    Only questions assigned to this client will be used when the client triggers the assessment.
-                  </p>
-                  <div className="row">
-                    {slots.map((slot) => {
-                      const assignedToOther = isSlotAssigned(slot.id) && 
-                        !clientAssignments.some(a => 
-                          a.slot_id === slot.id && a.client_id === selectedClient.client_id
-                        );
-                      
-                      return (
-                        <div key={slot.id} className="col-md-4 col-sm-6 mb-2">
-                          <div 
-                            className={`card ${
-                              selectedSlots.includes(slot.id) 
-                                ? "border-primary bg-light" 
-                                : assignedToOther 
-                                  ? "border-warning bg-warning bg-opacity-10" 
-                                  : ""
-                            }`}
-                            style={{ 
-                              cursor: assignedToOther ? "not-allowed" : "pointer",
-                              opacity: assignedToOther ? 0.6 : 1
-                            }}
-                            onClick={() => !assignedToOther && toggleSlotSelection(slot.id)}
-                          >
-                            <div className="card-body p-2">
-                              <div className="d-flex align-items-center">
-                                <input
-                                  type="checkbox"
-                                  className="form-check-input me-2"
-                                  checked={selectedSlots.includes(slot.id)}
-                                  onChange={() => !assignedToOther && toggleSlotSelection(slot.id)}
-                                  disabled={assignedToOther}
-                                />
-                                <div>
-                                  <small className="fw-bold">Question {slot.id}</small>
-                                  {/* <small className="text-muted d-block">
-                                    {slot.docker_port}/{slot.frontend_port}
-                                  </small> */}
-                                  {assignedToOther && (
-                                    <small className="text-warning">
-                                      Assigned to: {getSlotClientName(slot.id)}
-                                    </small>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-                          </div>
+                    Select the assessment questions to assign to this client. 
+                    During test assignment, a random question from these will be picked.
+                  </p>                  {allQuestions.length === 0 ? (
+                    <p className="text-muted">No assessment questions available.</p>
+                  ) : (
+                    allQuestions.map((q) => (
+                      <div
+                        key={q.question_id}
+                        className={`d-flex align-items-center p-3 mb-2 rounded border ${
+                          selectedQuestions.includes(q.question_id) ? "border-primary bg-primary bg-opacity-10" : ""
+                        }`}
+                        style={{ cursor: "pointer" }}
+                        onClick={() => toggleQuestionSelection(q.question_id)}
+                      >
+                        <input
+                          type="checkbox"
+                          className="form-check-input me-3"
+                          checked={selectedQuestions.includes(q.question_id)}
+                          onChange={() => toggleQuestionSelection(q.question_id)}
+                        />
+                        <div>
+                          <div className="fw-semibold">{q.question_id}</div>
+                          <small className="text-muted">{q.question_name || q.description || ""}</small>
                         </div>
-                      );
-                    })}
-                  </div>
+                      </div>
+                    ))
+                  )}
                 </div>
                 <div className="modal-footer">
                   <span className="me-auto text-muted">
-                    {selectedSlots.length} slot(s) selected
+                    {selectedQuestions.length} question(s) selected
                   </span>
                   <button 
                     type="button" 
@@ -499,7 +439,7 @@ function ClientManagement() {
                     onClick={() => {
                       setShowAssignModal(false);
                       setSelectedClient(null);
-                      setSelectedSlots([]);
+                      setSelectedQuestions([]);
                     }}
                   >
                     Cancel
@@ -509,6 +449,7 @@ function ClientManagement() {
                     className="btn btn-primary"
                     onClick={handleSaveAssignments}
                   >
+                    <FontAwesomeIcon icon={faSave} className="me-1" />
                     Save Assignments
                   </button>
                 </div>

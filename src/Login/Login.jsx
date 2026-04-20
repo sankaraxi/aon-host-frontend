@@ -37,7 +37,7 @@ export default function Login(){
                         window.location.href=`/admin/dashboard`
                     }
                     else if(role===2){
-                        window.location.href=`/question_creator/${id}`
+                        window.location.href=`/admin/superadmin`
                     }
                     else if(role===3){
                         window.location.href=`/systemcheck/${id}`

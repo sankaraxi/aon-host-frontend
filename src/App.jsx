@@ -16,6 +16,8 @@ import Sidebarcomp from './Admin/sidenav';
 import CreateTest from './Admin/pages/CreateTest';
 import ViewTest from './Admin/pages/ViewTest';
 import ClientManagement from './Admin/pages/ClientManagement';
+import SuperAdminDashboard from './Admin/pages/SuperAdminDashboard';
+import BusinessManagement from './Admin/pages/BusinessManagement';
 import HomePage from './HomePage/HomePage';
 
 // import Login from './components/Login/Login';
@@ -58,8 +60,10 @@ function App() {
    <>
     <BrowserRouter>
       <Routes>
-        <Route path='/' element={[<HomePage/>]}/>
-        <Route path='/login' element={[<Login/>]}/>
+        
+        {/* <Route path='/' element={[<HomePage/>]}/> */}
+        <Route path='/' element={[<Login/>]}/>
+        {/* <Route path='/login' element={[<Login/>]}/> */}
        
         <Route path='/guidelines/:id/:empNo' element={[<Menu/>,<GuidelinesPage/>]}/>
         
@@ -71,6 +75,8 @@ function App() {
         {/* <Route path="/admin/*" element={<AdminLayout/>} /> */}
         
         <Route path="/admin/dashboard" element={[<Dashboard/>]} />
+        <Route path="/admin/superadmin" element={<SuperAdminDashboard/>} />
+        <Route path="/admin/businesses" element={<BusinessManagement/>} />
         <Route path="/admin/create-test" element={<CreateTest/>}/>
         <Route path="/admin/view-test" element={<ViewTest/>}/>
         <Route path="/admin/clients" element={<ClientManagement/>}/>

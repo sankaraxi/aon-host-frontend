@@ -193,15 +193,10 @@ export default function CodeMenu() {
             trackWorkspaceStart();
         }, [framework, userRole]);
 
-     useEffect(() => {
-    if (logData?.log_status === 2) {
-      const newTimeLeft = Math.floor((logData.closing_time_ms || 2100 * 1000) / 1000);
-      setTimeLeft(newTimeLeft);
-      console.log("Time left from logData:", newTimeLeft);
-    } else {
-      setTimeLeft(1800); // Default to 30 minutes
-    }
-  }, [logData]);
+    // NOTE: We do NOT set timeLeft directly from logData here.
+    // The timer-logic useEffect below handles initialisation using the
+    // server's absolute deadline (timer_end_ms) so the timer survives
+    // close / reopen without restarting.
 
     // Auto-submit when timer reaches 0
     useEffect(() => {
@@ -324,37 +319,64 @@ useEffect(() => {
   }
 
   const initializeTimer = () => {
-    const savedEndTime = sessionStorage.getItem("examEndTime");
     const defaultDuration = 1800; // 30 minutes in seconds
 
-    if (!savedEndTime) {
-      // Use logData.closing_time_ms if available and valid, else default
-      const durationInSeconds = logData?.closing_time_ms
-        ? Math.floor(logData.closing_time_ms / 1000)
-        : defaultDuration;
+    // ── Always prefer the server's absolute deadline ───────────────────
+    // logData.timer_end_ms is an epoch timestamp the backend computed.
+    // Using it directly means close → reopen keeps the same deadline.
+    const serverDeadlineMs = logData?.timer_end_ms;
+    const serverRemainingMs = logData?.closing_time_ms;
 
-      if (isNaN(durationInSeconds) || durationInSeconds <= 60) {
-        console.warn("Invalid closing_time_ms, using default duration");
-        setTimeLeft(defaultDuration);
-        const endTime = new Date(Date.now() + defaultDuration * 1000);
-        sessionStorage.setItem("examEndTime", endTime.toISOString());
-      } else {
-        setTimeLeft(durationInSeconds);
-        const endTime = new Date(Date.now() + durationInSeconds * 1000);
-        sessionStorage.setItem("examEndTime", endTime.toISOString());
-      }
-    } else {
-      const endTimeDate = new Date(savedEndTime);
-      if (isNaN(endTimeDate.getTime())) {
-        console.warn("Invalid savedEndTime, resetting to default duration");
-        setTimeLeft(defaultDuration);
-        const endTime = new Date(Date.now() + defaultDuration * 1000);
-        sessionStorage.setItem("examEndTime", endTime.toISOString());
-      } else {
-        const diff = Math.floor((endTimeDate - new Date()) / 1000);
-        setTimeLeft(diff > 0 ? diff : 0);
-      }
+    // Compute the authoritative deadline from server data.
+    let deadlineMs = null;
+    if (serverDeadlineMs && Number.isFinite(serverDeadlineMs) && serverDeadlineMs > Date.now()) {
+      deadlineMs = serverDeadlineMs;
+    } else if (serverRemainingMs && Number.isFinite(serverRemainingMs) && serverRemainingMs > 1000) {
+      deadlineMs = Date.now() + serverRemainingMs;
     }
+
+    const savedEndTime = sessionStorage.getItem("examEndTime");
+
+    if (deadlineMs) {
+      // Server has a valid deadline — always use it (it survives close/reopen).
+      const serverEndIso = new Date(deadlineMs).toISOString();
+
+      // Only overwrite sessionStorage if it differs significantly (>2 s drift)
+      // to avoid needlessly resetting a perfectly valid local value.
+      if (savedEndTime) {
+        const localDeadline = new Date(savedEndTime).getTime();
+        if (Math.abs(localDeadline - deadlineMs) > 2000) {
+          console.log("Syncing examEndTime with server deadline");
+          sessionStorage.setItem("examEndTime", serverEndIso);
+        }
+      } else {
+        sessionStorage.setItem("examEndTime", serverEndIso);
+      }
+
+      const diff = Math.floor((deadlineMs - Date.now()) / 1000);
+      setTimeLeft(diff > 0 ? diff : 0);
+      return;
+    }
+
+    // ── Fallback: no valid server deadline ─────────────────────────────
+    if (savedEndTime) {
+      const endTimeDate = new Date(savedEndTime);
+      if (!isNaN(endTimeDate.getTime())) {
+        const diff = Math.floor((endTimeDate - new Date()) / 1000);
+        if (diff > 0) {
+          setTimeLeft(diff);
+          return;
+        }
+      }
+      // Stale or invalid — clear it so we fall through to the default.
+      console.warn("Stale/invalid examEndTime and no server deadline — using default");
+      sessionStorage.removeItem("examEndTime");
+    }
+
+    // No server deadline and no valid local value — fresh 30-min default.
+    setTimeLeft(defaultDuration);
+    const endTime = new Date(Date.now() + defaultDuration * 1000);
+    sessionStorage.setItem("examEndTime", endTime.toISOString());
   };
 
   const autoStartTimer = async () => {
@@ -390,7 +412,7 @@ useEffect(() => {
     if (!isOnlineRef.current) return; // Freeze display while offline
     const endTime = sessionStorage.getItem("examEndTime");
     if (!endTime) {
-      setTimeLeft(0);
+      // examEndTime not yet initialised (API still loading) — wait, never force to 0
       return;
     }
     const endTimeDate = new Date(endTime);

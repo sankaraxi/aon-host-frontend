@@ -49,6 +49,11 @@ export function useAssessmentProtection({
 
   const isProcessingRef = useRef(false);
   const onAutoSubmitRef = useRef(onAutoSubmit);
+  // Tracks whether a fullscreen transition is currently underway.
+  // Chrome fires visibilitychange:'hidden' during fullscreen enter/exit, which
+  // must NOT be counted as a real tab switch.
+  const fullscreenTransitionRef = useRef(false);
+  const fullscreenTransitionTimerRef = useRef(null);
 
   // Keep the callback ref up to date without re-registering the listener
   useEffect(() => {
@@ -57,6 +62,8 @@ export function useAssessmentProtection({
 
   const handleVisibilityChange = useCallback(() => {
     if (!enabled || devMode || isProcessingRef.current) return;
+    // Ignore visibility events caused by the browser entering/exiting fullscreen.
+    if (fullscreenTransitionRef.current) return;
 
     // If the page is being refreshed/navigated away, visibilitychange fires 'hidden'
     // just like a real tab switch. Skip counting in that case.
@@ -151,11 +158,27 @@ export function useAssessmentProtection({
     // subsequent real tab switches are detected correctly.
     sessionStorage.removeItem('_isUnloading');
 
+    // Suppress visibilitychange events that are caused by fullscreen transitions.
+    // Chrome (and some other browsers) fire visibilitychange:'hidden' when the
+    // page enters or exits fullscreen, which must not be treated as a tab switch.
+    const handleFullscreenChange = () => {
+      fullscreenTransitionRef.current = true;
+      if (fullscreenTransitionTimerRef.current) {
+        clearTimeout(fullscreenTransitionTimerRef.current);
+      }
+      fullscreenTransitionTimerRef.current = setTimeout(() => {
+        fullscreenTransitionRef.current = false;
+      }, 1000); // 1 s grace period — fullscreen transitions typically finish within 300 ms
+    };
+
     // Try to maintain fullscreen on mount (works if triggered by prior user gesture)
     if (
       !isFullscreen() &&
       sessionStorage.getItem('assessmentFullscreen') === 'true'
     ) {
+      // Mark that a fullscreen transition is starting BEFORE requesting fullscreen
+      // so any immediately-fired visibilitychange is suppressed.
+      handleFullscreenChange();
       enterFullscreen().catch(() => {});
     }
 
@@ -166,11 +189,20 @@ export function useAssessmentProtection({
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+    document.addEventListener('MSFullscreenChange', handleFullscreenChange);
     window.addEventListener('beforeunload', handleBeforeUnload);
 
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('MSFullscreenChange', handleFullscreenChange);
       window.removeEventListener('beforeunload', handleBeforeUnload);
+      if (fullscreenTransitionTimerRef.current) {
+        clearTimeout(fullscreenTransitionTimerRef.current);
+      }
     };
   }, [enabled, handleVisibilityChange]);
 }
