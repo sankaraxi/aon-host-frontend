@@ -328,9 +328,24 @@ useEffect(() => {
     const serverRemainingMs = logData?.closing_time_ms;
 
     // Compute the authoritative deadline from server data.
+    // DEADLINE_EPOCH_THRESHOLD: values above this are absolute epoch timestamps,
+    // values below are remaining-ms durations (mirrors the backend constant).
+    const DEADLINE_EPOCH_THRESHOLD = 1_000_000_000_000;
+
     let deadlineMs = null;
-    if (serverDeadlineMs && Number.isFinite(serverDeadlineMs) && serverDeadlineMs > Date.now()) {
-      deadlineMs = serverDeadlineMs;
+
+    if (serverDeadlineMs && Number.isFinite(serverDeadlineMs) && serverDeadlineMs > DEADLINE_EPOCH_THRESHOLD) {
+      // Server has a recorded epoch deadline.
+      if (serverDeadlineMs > Date.now()) {
+        // Still in the future — use it.
+        deadlineMs = serverDeadlineMs;
+      } else {
+        // Deadline has already passed — timer expired while user was away.
+        // Do NOT reset to 30 mins; treat as expired immediately.
+        console.warn("Server deadline has passed — timer expired, triggering expiry");
+        setTimeLeft(0);
+        return;
+      }
     } else if (serverRemainingMs && Number.isFinite(serverRemainingMs) && serverRemainingMs > 1000) {
       deadlineMs = Date.now() + serverRemainingMs;
     }
@@ -367,13 +382,18 @@ useEffect(() => {
           setTimeLeft(diff);
           return;
         }
+        // savedEndTime exists but has passed — treat as expired, not a fresh start.
+        console.warn("examEndTime has passed and no server deadline — timer expired");
+        sessionStorage.removeItem("examEndTime");
+        setTimeLeft(0);
+        return;
       }
-      // Stale or invalid — clear it so we fall through to the default.
-      console.warn("Stale/invalid examEndTime and no server deadline — using default");
+      // Unparseable value — clear it and fall through to default.
+      console.warn("Invalid examEndTime format — clearing and using default");
       sessionStorage.removeItem("examEndTime");
     }
 
-    // No server deadline and no valid local value — fresh 30-min default.
+    // No server deadline and no prior session — fresh 30-min default.
     setTimeLeft(defaultDuration);
     const endTime = new Date(Date.now() + defaultDuration * 1000);
     sessionStorage.setItem("examEndTime", endTime.toISOString());

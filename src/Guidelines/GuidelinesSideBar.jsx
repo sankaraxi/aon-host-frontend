@@ -7,9 +7,9 @@ const GuidelinesSideBar = () => {
       step: '01',
       title: 'Open Terminal',
       details: [
-        'Open terminal using shortcut Ctrl + `',
-        <p>
-        Select <span className='bg-gray-300 mx-1 font-semibold font-firacode px-1 rounded-md text-red-400'><RxHamburgerMenu className="inline-block mx-1 text-red-500" /> →  Terminal → New Terminal</span>  from the left top corner
+        <p className='m-0'>Open terminal using shortcut Ctrl + `</p>,
+        <p className='m-0'> 
+        Select <span className='bg-yellow-100 px-1 rounded font-mono text-red-600'><RxHamburgerMenu className="inline-block mx-1 text-red-500" /> →  Terminal → New Terminal</span>  from the left top corner
       </p>,
       ],
       image: '/guidelines_image1.png', // Replace with actual image paths
@@ -17,39 +17,38 @@ const GuidelinesSideBar = () => {
     {
       step: '02',
       title: 'Install Dependencies',
-      details: [<p>Run <span className='bg-gray-300 mx-1 font-semibold font-firacode px-1 rounded-md text-red-400'>npm install</span> to install the necessary dependencies
-      </p>],
+      details: [<p className='m-0'>Run <span className='bg-yellow-100 px-1 rounded font-mono text-red-600'>npm install</span> to install the necessary dependencies</p>],
       image: '/guidelines_image2.png',
     },
     {
       step: '03',
       title: 'Launch Project',
-      details: [<p>Run <span className='bg-gray-300 mx-1 font-semibold font-firacode px-1 rounded-md text-red-400'>npm run dev</span> to run the project</p>,],
+      details: [<p className='m-0'>Run <span className='bg-yellow-100 px-1 rounded font-mono text-red-600'>npm run dev</span> to start the development server</p>],
       image: '/guidelines_image3.png',
     },
     {
       step: '04',
-      title: 'View your Output',
-      details: [<p>Click on the <span className='bg-gray-300 mx-1 font-semibold font-firacode px-1 rounded-md text-red-400'>Output</span> button in the bottom right corner to navigate to your output page</p>],
+      title: 'View Your Output',
+      details: [<p className='m-0'>Click on the <span className='bg-yellow-100 px-1 rounded font-mono text-red-600'>Output</span> button in the bottom right corner to navigate to your output page</p>],
       image: '/guidelines_image6.png',
     },
     {
       step: '05',
       title: 'Add Your Code',
-      details: [<p>Navigate to the <span className='bg-gray-300 mx-1 font-semibold font-firacode px-1 rounded-md text-red-400'>App.css</span> file to add your styles</p>,<p>Navigate to the <span className='bg-gray-300 mx-1 font-semibold font-firacode px-1 rounded-md text-red-400'>App.jsx</span> file to add your code</p>],
+      details: [<p className='m-0'>Navigate to the <span className='bg-yellow-100 px-1 rounded font-mono text-red-600'>App.css</span> file to add your styles</p>,<p className='m-0'>Navigate to the <span className='bg-yellow-100 px-1 rounded font-mono text-red-600'>App.jsx</span> file to add your code</p>],
       image: '/guidelines_image4.png',
     },
     {
-      step:'05',
-      title: 'To view Instructions',
-      details: [<p>Open the <span className='bg-gray-300 mx-1 font-semibold font-firacode px-1 rounded-md text-red-400'>README.md</span> file to view the instructions</p>, <p>And open<span className='bg-gray-300 mx-1 font-semibold font-firacode px-1 rounded-md text-red-400'>OUTPUT.png</span> file to view the Sample Output </p> ],
+      step:'06',
+      title: 'To Run and Test Your Code',
+      details: [<p className='m-0'>Run and Test your code by clicking <span className='bg-yellow-100 px-1 rounded font-mono text-red-600'>Run Test</span> button once you have written your code</p>],
       image: '/guidelines_image7.png',
 
     },
     {
       step: '07',
       title: 'Submit Assignment',
-      details: [<p>Submit the assignment by clicking <span className='bg-gray-300 mx-1 font-semibold font-firacode px-1 rounded-md text-red-400'>Submit Assignment</span> button once you finished coding</p>],
+      details: [<p className='m-0'>Submit the assignment by clicking <span className='bg-yellow-100 px-1 rounded font-mono text-red-600'>Submit Assignment</span> button once you finished coding</p>],
       image: '/guidelines_image5.png',
     }, 
     
