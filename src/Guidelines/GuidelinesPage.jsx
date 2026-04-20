@@ -242,8 +242,8 @@ export default function GuidelinesPage() {
             <ul className="list-disc list-inside text-gray-800 space-y-1 !text-[17px]">
               <li>You will be working in a browser-based VS Code environment (codeserver).</li>
               <li>The project is preconfigured with React framework.</li>
-              <li>You may choose either React or Vue.js for this task — select the one you are most comfortable with.</li>
-              <li>For styling, use the shared stylesheet: <code>App.css</code>.</li>
+              <li>Write your HTML/Javascript code in the <code>App.jsx</code> file.</li>
+              <li>For styling, use the shared stylesheet: <code>App.css</code> file.</li>
             </ul>
           </div>
           <div className="shadow-md p-4 animation">
