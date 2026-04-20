@@ -55,17 +55,26 @@ const GuidelinesSideBar = () => {
   ];
 
   return (
-    <div className="max-w-4xl pl-4 pt-4 bg-white shadow-md rounded-lg">
-      <header className="mb-8 pb-4 border-b border-gray-200 flex justify-between items-center">
-        <div>
-          <h2 className="text-2xl font-medium text-gray-800">Project Setup Guidelines</h2>
-          <p className="text-sm text-gray-500 mt-1">Follow these steps to set up your development environment</p>
+    <div className="max-w-5xl  pt-4 bg-white shadow-md rounded-lg">
+
+      <header className="mb-4 pl-6 border-b border-gray-200 flex flex-col justify-between">
+        <div className="ml-3">
+          <h2 className="!text-2xl !font-bold text-gray-800 text-left">Project Setup Guidelines</h2>
+          <p className= "text-gray-500 mt-1">Follow these steps to set up your development environment</p>
+        </div>
+
+        <div className=" ml-3  rounded-r-md">
+          <p className="text-black-800 !font-bold text-lg flex items-center gap-2">
+            Important Note
+          </p>
+          <p className="text-black-700 !text-[15px] mt-1">
+            All commands such as <code className="bg-yellow-100 px-1 rounded font-mono text-red-600">npm install</code> and <code className="bg-yellow-100 px-1 rounded font-mono text-red-600">npm run dev</code> must be executed <strong>within the assessment environment</strong> (the browser-based VS Code terminal), <strong>not on your local machine</strong>.
+          </p>
         </div>
       </header>
-
       <ol className="space-y-10">
         {steps.map(({ step, title, details, image }, index) => (
-          <li key={index} className="flex gap-6 pb-8">
+          <li key={index} className="flex gap-6">
             <div className="flex md:flex-col">
               <div className="mr-4 md:mr-0 md:mb-4">
                 <div className="flex items-center justify-center w-8 h-8 border border-gray-300 rounded-full text-sm font-medium text-gray-600">
@@ -77,10 +86,10 @@ const GuidelinesSideBar = () => {
               )}
             </div>
             
-            <div className="flex-1 flex flex-col gap-6">
+            <div className="flex-1 flex flex-col">
               <div className="flex-1">
-                <h3 className=" text-gray-800 mb-2">{title}</h3>
-                <ul className="space-y-1 text-gray-600 text-sm">
+                <h3 className="!text-[22px] !font-bold text-gray-800 mb-2">{title}</h3>
+                <ul className="space-y-1 text-gray-800 !text-[17px]">
                   {details.map((item, i) => (
                     <li key={i} className="flex items-baseline">
                       <span className="inline-block w-1.5 h-1.5 rounded-full bg-gray-400 mr-2.5 flex-shrink-0 mt-1.5"></span>
@@ -89,7 +98,7 @@ const GuidelinesSideBar = () => {
                   ))}
                 </ul>
               </div>
-              <div className="w-full h-75 bg-gray-100 rounded-md overflow-hidden flex-shrink-0">
+              <div className="w-3/4 mt-3 bg-gray-100 rounded-md overflow-hidden flex-shrink-0">
                 <img 
                   src={image} 
                   alt={`Step ${step}: ${title}`}
@@ -104,12 +113,6 @@ const GuidelinesSideBar = () => {
           </li>
         ))}
       </ol>
-      
-      {/* <div className="mt-10 pt-6 border-t border-gray-200 flex justify-end">
-        <button className="px-6 py-2 bg-gray-800 text-white text-sm font-medium rounded hover:bg-gray-700 transition-colors">
-          Begin Setup
-        </button>
-      </div> */}
     </div>
   );
 };
