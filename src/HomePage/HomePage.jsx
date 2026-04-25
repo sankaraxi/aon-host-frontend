@@ -84,7 +84,12 @@ const HomePage = () => {
           err.response?.data?.details ||
           err.response?.data?.error;
         if (status === 409) {
-          setApiError(serverMsg || "A test link for this roll number already exists.");
+          const existingLink = err.response?.data?.existing_link;
+          if (existingLink) {
+            setResult({ test_link: existingLink, already_existed: true });
+          } else {
+            setApiError(serverMsg || "A test link for this roll number already exists.");
+          }
         } else if (status === 422) {
           setApiError(serverMsg || "Invalid data submitted. Please review your inputs.");
         } else if (status >= 500) {
@@ -170,8 +175,16 @@ const HomePage = () => {
           <div style={styles.resultCard} role="status" aria-live="polite">
             <div style={styles.resultHeader}>
               <span style={styles.successIcon}>&#10003;</span>
-              <span style={styles.successTitle}>Link Generated Successfully</span>
+              <span style={styles.successTitle}>
+                {result.already_existed ? "Test Link Already Generated" : "Link Generated Successfully"}
+              </span>
             </div>
+            {result.already_existed && (
+              <div style={{ ...styles.warnBanner, marginBottom: 12 }} role="note">
+                <span style={styles.errorBannerIcon}>&#8505;</span>
+                <span>A test link was previously generated for this roll number. Use the link below.</span>
+              </div>
+            )}
 
             {result.aon_id && (
               <div style={styles.metaRow}>
