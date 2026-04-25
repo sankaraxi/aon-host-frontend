@@ -352,40 +352,40 @@ useEffect(() => {
     };
 
 const handleLogout = async () => {
-    try {
-      const response = await fetch(`${import.meta.env.VITE_BACKEND_API_URL}/cleanup-docker-2`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          userId: userId, // Ensure userId is defined in the scope
-        }),
-      });
-  
-      // Check if the response is successful
-      if (!response.ok) {
-        throw new Error(`Server responded with status ${response.status}`);
-      }
-  
-      // Parse the response
-      const data = await response.json();
-      if (data.status !== 'success') {
-        throw new Error(data.error || 'Docker cleanup failed');
-      }
-  
-      // Clear sessionStorage and redirect
-      sessionStorage.removeItem('userRole');
-      sessionStorage.removeItem('examEndTime');
-      window.location.href = '/'; // Redirect to login page
-    } catch (error) {
-      console.error('Failed to clean up Docker:', error);
-      // Proceed with logout even if the server request fails
-      sessionStorage.removeItem('userRole');
-      sessionStorage.removeItem('examEndTime');
-      window.location.href = '/'; // Redirect to login page
+try {
+    const response = await fetch(`${import.meta.env.VITE_BACKEND_API_URL}/cleanup-docker-2`, {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+        userId: userId, // Ensure userId is defined in the scope
+    }),
+    });
+
+    // Check if the response is successful
+    if (!response.ok) {
+    throw new Error(`Server responded with status ${response.status}`);
     }
-  };
+
+    // Parse the response
+    const data = await response.json();
+    if (data.status !== 'success') {
+    throw new Error(data.error || 'Docker cleanup failed');
+    }
+
+    // Clear sessionStorage and redirect
+    sessionStorage.removeItem('userRole');
+    sessionStorage.removeItem('examEndTime');
+    window.location.href = '/'; // Redirect to login page
+} catch (error) {
+    console.error('Failed to clean up Docker:', error);
+    // Proceed with logout even if the server request fails
+    sessionStorage.removeItem('userRole');
+    sessionStorage.removeItem('examEndTime');
+    window.location.href = '/'; // Redirect to login page
+}
+};
 
     const closeGradeModal = () => {
         setIsModalClosing(true);

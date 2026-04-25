@@ -61,9 +61,9 @@ function App() {
     <BrowserRouter>
       <Routes>
         
-        {/* <Route path='/' element={[<HomePage/>]}/> */}
-        <Route path='/' element={[<Login/>]}/>
-        {/* <Route path='/login' element={[<Login/>]}/> */}
+        <Route path='/' element={[<HomePage/>]}/>
+        {/* <Route path='/' element={[<Login/>]}/> */}
+        <Route path='/login' element={[<Login/>]}/>
        
         <Route path='/guidelines/:id/:empNo' element={[<Menu/>,<GuidelinesPage/>]}/>
         
